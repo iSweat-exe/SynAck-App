@@ -1,0 +1,28 @@
+{
+  "id": "count_vowels",
+  "title": "Compter les voyelles",
+  "difficulty": "easy",
+  "summary": "Compte les voyelles d'une phrase, majuscules comprises.",
+  "topics": [
+    "Chaînes",
+    "Boucles"
+  ],
+  "statement": "Compte le nombre de **voyelles** dans un texte.",
+  "input": "Une ligne de texte (lettres sans accent et espaces, jusqu'à 40 caractères).",
+  "output": "Le nombre de voyelles.",
+  "notes": "Les voyelles sont `a`, `e`, `i`, `o`, `u` et `y`. Les **majuscules comptent** aussi : `A` est une voyelle.",
+  "examples": [
+    {
+      "input": "Bonjour\n",
+      "output": "3"
+    },
+    {
+      "input": "Le Chat Noir\n",
+      "output": "4"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\ntexte = lines[0]\n\n# Affiche le nombre de voyelles.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst texte = lines[0];\n\n// Affiche le nombre de voyelles.\n"
+  }
+}

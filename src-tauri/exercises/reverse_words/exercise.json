@@ -1,0 +1,28 @@
+{
+  "id": "reverse_words",
+  "title": "Inverser les mots",
+  "difficulty": "easy",
+  "summary": "Écris les mots d'une phrase dans l'ordre inverse.",
+  "topics": [
+    "Chaînes",
+    "Listes"
+  ],
+  "statement": "Écris les mots d'une phrase **dans l'ordre inverse**.",
+  "input": "Une phrase de 1 à 8 mots en minuscules, séparés par un espace.",
+  "output": "Les mêmes mots, du dernier au premier, séparés par un espace.",
+  "notes": "Seul l'**ordre des mots** change : les lettres de chaque mot restent dans le même sens.",
+  "examples": [
+    {
+      "input": "un deux trois\n",
+      "output": "trois deux un"
+    },
+    {
+      "input": "bonjour\n",
+      "output": "bonjour"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nphrase = lines[0]\n\n# Affiche les mots dans l'ordre inverse.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst phrase = lines[0];\n\n// Affiche les mots dans l'ordre inverse.\n"
+  }
+}

@@ -1,0 +1,75 @@
+name: CI
+
+# The same check as on a developer's machine (`npm run check`: SemVer files, types, lint, format,
+# front tests, rustfmt, clippy, Rust tests), on Windows and Linux. "CI gate" is the only check that
+# branch protection needs to require.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+          - name: Linux
+            os: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Linux dependencies (WebKit, tray, keyring)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev pkg-config
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # Reads rust-toolchain.toml (stable, with clippy and rustfmt) and caches the build.
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache-workspaces: src-tauri
+
+      - run: npm ci
+
+      # Tauri embeds the built front end when it compiles the Rust side, so it has to exist first.
+      - name: Build the front end
+        run: npm run build
+
+      - name: Check
+        run: npm run check
+
+  gate:
+    name: CI gate
+    needs: check
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every check passed
+        run: |
+          if [ "${{ needs.check.result }}" != "success" ]; then
+            echo "::error::A check failed or was cancelled (${{ needs.check.result }})."
+            exit 1
+          fi

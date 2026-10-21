@@ -1,0 +1,28 @@
+{
+  "id": "caesar",
+  "title": "Chiffre de César",
+  "difficulty": "medium",
+  "summary": "Décale chaque lettre d'un texte de k places dans l'alphabet.",
+  "topics": [
+    "Chaînes",
+    "Boucles"
+  ],
+  "statement": "Le **chiffre de César** décale chaque lettre de `k` places dans l'alphabet : avec `k = 3`, `a` devient `d`, `b` devient `e`...",
+  "input": "- ligne 1 : le décalage `k` (0 ≤ k ≤ 25) ;\n- ligne 2 : un texte en minuscules sans accent, avec des espaces (jusqu'à 30 caractères).",
+  "output": "Le texte chiffré.",
+  "notes": "Après `z`, on **revient à `a`** : avec `k = 3`, `x` devient `a`. Les **espaces ne changent pas**.",
+  "examples": [
+    {
+      "input": "3\nabc xyz\n",
+      "output": "def abc"
+    },
+    {
+      "input": "0\nbonjour\n",
+      "output": "bonjour"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\ndecalage = int(lines[0])\ntexte = lines[1]\n\n# Affiche le texte chiffré.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst decalage = Number(lines[0]);\nconst texte = lines[1];\n\n// Affiche le texte chiffré.\n"
+  }
+}

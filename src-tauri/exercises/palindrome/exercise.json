@@ -1,0 +1,28 @@
+{
+  "id": "palindrome",
+  "title": "Palindrome",
+  "difficulty": "easy",
+  "summary": "Un mot se lit-il pareil à l'endroit et à l'envers ?",
+  "topics": [
+    "Chaînes",
+    "Conditions"
+  ],
+  "statement": "Un **palindrome** est un mot qui se lit de la même façon dans les deux sens : `kayak`, `radar`... Dis si le mot reçu en est un.",
+  "input": "Un mot en minuscules (1 à 12 lettres).",
+  "output": "`oui` si c'est un palindrome, `non` sinon.",
+  "notes": "Un mot d'une seule lettre est un palindrome.",
+  "examples": [
+    {
+      "input": "kayak\n",
+      "output": "oui"
+    },
+    {
+      "input": "bonjour\n",
+      "output": "non"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nmot = lines[0]\n\n# Affiche oui ou non.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst mot = lines[0];\n\n// Affiche oui ou non.\n"
+  }
+}

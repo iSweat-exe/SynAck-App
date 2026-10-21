@@ -1,0 +1,258 @@
+# SynAck (application desktop)
+
+Application desktop **gratuite et en français** d'**exercices de code** : l'utilisateur lit un énoncé, écrit sa solution dans l'application, et l'application la compile et l'exécute **avec les vrais compilateurs installés sur sa machine**, puis la vérifie pour de bon. Langages actuellement proposés dans les exercices : Python et JavaScript (le moteur sait aussi exécuter Rust, Go, C et C++, voir `languages.json`).
+
+**Objectif unique pour l'instant : des exercices qui fonctionnent très, très bien.** Les cours, le parcours d'apprentissage et le reste viendront plus tard, une fois les exercices solides. Ne pas les réintroduire sans demande explicite.
+
+Ce projet **remplace** la version web (`C:\Users\iswea\Desktop\SynAck`, Next.js + Payload + Supabase), abandonnée. Cet ancien dépôt reste **en lecture seule** : on s'en sert comme réserve (cours Markdown, `DESIGN.md`, migrations Supabase), on n'y modifie rien.
+
+## Règle n°1 : UNE FEATURE À LA FOIS
+
+Le porteur du projet travaille seul et veut éviter la surcharge mentale et le burn-out. Cette règle prime sur tout le reste.
+
+- La feature active est la seule marquée « EN COURS » dans `docs/ROADMAP.md`. On ne travaille que sur elle.
+- **Ne jamais anticiper** : pas de code, de dépendance, de dossier ou d'abstraction « pour plus tard ». Une abstraction naît quand la **deuxième** utilisation apparaît, pas avant.
+- Une idée hors périmètre se note dans `docs/ROADMAP.md` (section « Idées »), en une ligne, puis on continue. On ne la commence pas.
+- Une feature est terminée quand : elle fonctionne dans l'application lancée, `npm run check` passe, et sa case est cochée dans la feuille de route. Seulement alors on en ouvre une autre, à la demande du porteur.
+- Si une demande dépasse la feature active ou en cache plusieurs, le dire et proposer de la découper avant de coder.
+- Préférer la solution la plus simple qui marche. Pas de fonctionnalité non demandée, pas de refactor non demandé.
+
+## Stack
+
+| Couche           | Choix                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| Coquille desktop | **Tauri 2** (Rust stable, minimum 1.99.0 dans `Cargo.toml` ; WebView2 sous Windows, WebKit ailleurs) |
+| Interface        | **React 19 + TypeScript + Vite**                                                                     |
+| Éditeur de code  | **Monaco** embarqué via Vite (pas de CDN), chargé en différé                                         |
+| Données locales  | **SQLite** (`rusqlite`, SQLite embarqué) dans le dossier de données de l'appli                       |
+| Données en ligne | Projet **Supabase** déjà existant (voir plus bas), pas encore branché                                |
+
+Ajouter une dépendance se justifie par la feature en cours, jamais par anticipation.
+
+## Commandes
+
+```bash
+npm install            # une fois
+npm run tauri dev      # lance l'application en développement (Vite + fenêtre native)
+npm run tauri build    # produit l'installeur ; exige la clé de signature (voir build:signed)
+npm run build:signed -- --bundles nsis  # idem, en prenant la clé dans .secret/ (essai local d'un installeur)
+npm run version:check  # les 5 fichiers de version sont-ils identiques et en SemVer ? (compris dans `check`)
+npm run version:set -- 0.2.0  # change la version partout (package.json, Cargo.toml/lock, tauri.conf.json)
+npm run build          # type-check TypeScript + build du front seul
+npm run check          # LA vérification complète : versions, tsc, ESLint, Prettier, rustfmt, clippy (-D warnings), cargo test
+npm run format         # reformate le front (Prettier) ; `cargo fmt` dans src-tauri/ pour le Rust
+```
+
+Le premier `cargo check` ou `tauri dev` compile toutes les dépendances Rust (plusieurs minutes), les suivants sont rapides. Les tests Rust utilisent les **vrais outils installés** (Python, Node, Go, Rust, C, C++) et sont sautés, avec un message, pour ceux qui manquent. `cargo test -- --ignored path_is_stale` vérifie à la main que `gcc` est trouvé depuis un processus au `PATH` périmé : un test « ok » n'est donc pas forcément exécuté (lancer `cargo test -- --nocapture` pour voir les `skipping:`). Les tests front (Vitest, `npm test`) couvrent la logique pure (`src/exercises/filter.test.ts`) ; `npm run check` les lance.
+
+## Architecture
+
+```
+src/            Interface React. Aucune logique système ici.
+  api/          Un fichier par groupe de commandes Tauri (types miroirs du Rust) ; `call.ts` encapsule `invoke`.
+  components/   `App` = coque (`Sidebar` à gauche sur toute la hauteur, `Navbar` vide au-dessus de la page, page centrée) ; `SettingsScreen` = Réglages. Page Exercices : `ExercisesScreen` > `ExerciseFilters` + `ExerciseList`, ou `ExerciseSolver` > `ExerciseStatement` + `CheckResults`.
+  exercises/    Hook `useExercises` (catalogue + exercices résolus), `filter.ts` (recherche et filtres, fonctions pures testées), libellés.
+  protocols/    Page Protocoles : les protocoles sont des DONNÉES (`data/<id>.ts`, listés dans `catalog.ts`), dessinés par un seul moteur de schémas. `types.ts`, `timeline.ts` (étapes, perte de paquet), `layout.ts` (géométrie du SVG), `player.ts` (lecture/pause/pas à pas), `answers.ts` (réponses d'un quiz) : fonctions pures testées. `lessons/<id>.ts` : le cours en détail, une leçon par sujet du quiz. `useQuiz`, `useValidatedProtocols` : hooks. Composants : `ProtocolsScreen` (liste + filtres), `ProtocolList`, `ProtocolPage`, `ProtocolPlayer`, `SequenceDiagram`, `ProtocolQuiz`. Le panneau de filtres `CatalogFilters` est commun aux exercices et aux protocoles.
+  environment/  Hook `useEnvironment` (outils installés).
+  editor/       Monaco (`setup.ts` = workers locaux et thèmes, `CodeEditor.tsx`, `LazyCodeEditor.tsx`).
+  theme/        Tokens, composants CSS, thème clair/sombre.
+src-tauri/      Cœur Rust : tout ce qui touche au système (processus, fichiers, détection d'outils).
+  languages.json  Les langages DÉCRITS PAR DES DONNÉES (détection, guide d'installation par OS, commandes de compilation/exécution).
+  protocols/<id>.json  La banque de questions d'un protocole (JAMAIS envoyée au front) : par sujet, des affirmations vraies et fausses, plus des séquences à remettre en ordre.
+  exercises/<id>/ exercise.json (énoncé, exemples visibles, codes de départ), solution.py et solution.js (corrigés, JAMAIS dans le binaire).
+  src/lib.rs      Point d'entrée Tauri (commandes déclarées ici).
+  src/runner.rs   Exécution d'un processus surveillé (timeout, stdin, sortie plafonnée à 1 Mo/flux, sans fenêtre console).
+  src/languages.rs  Charge `languages.json`, détecte les outils, commande `check_environment`.
+  src/path.rs     Le `PATH` à jour : sous Windows, relu depuis le registre à chaque détection et pour chaque processus lancé (un compilateur installé pendant que l'appli tourne est trouvé sans la relancer).
+  src/execute.rs  `prepare` (écrit le code, compile une fois) et `run_prepared` (lance autant de fois que voulu).
+  src/exercises.rs  Catalogue (`exercise.json` embarqués), commande `list_exercises`.
+  src/cases.rs    LES TESTS CACHÉS : générateurs d'entrées aléatoires + solution de référence (l'oracle) par exercice.
+  src/check.rs    Vérification (`check_exercise`) : décide « résolu » et l'enregistre.
+  src/progress.rs Exercices résolus et protocoles validés dans SQLite (`get_solved`, `get_validated_protocols`), migrations par `PRAGMA user_version`.
+  src/protocols.rs LE QUIZ DES PROTOCOLES : génère un quiz différent à chaque fois, le corrige, décide « validé » et l'enregistre (`start_protocol_quiz`, `submit_protocol_quiz`).
+  src/error.rs    `AppError` : sérialisé vers le front sous forme de message français.
+  capabilities/   Permissions accordées à la fenêtre (principe du moindre privilège).
+docs/           Feuille de route (`ROADMAP.md`) et publication des versions (`RELEASING.md`).
+supabase/       Config, migrations, tests et seed du projet Supabase (appliqués par la CI, jamais à la main).
+scripts/        `version.mjs` (versions, notes de version), `signed-build.mjs` (build signé local).
+.github/        CI (`ci.yml`), publication (`release.yml`), migrations (`database.yml`), Dependabot.
+.secret/        Clé de signature des mises à jour. **Ignoré par git, jamais lu ni affiché, jamais commité.**
+```
+
+Principes :
+
+1. **Le front ne fait rien de dangereux et ne décide de rien d'important.** Lancer un processus, lire ou écrire un fichier, détecter un compilateur, **juger un exercice, enregistrer une réussite** : uniquement en Rust, via des commandes Tauri étroites et typées. Le front les appelle avec `invoke` et affiche le résultat.
+2. **Les langages sont des données, pas du code.** Un langage = une entrée de `languages.json` (détection, commandes de compilation/exécution, guide d'installation). Ajouter un langage ne touche pas au moteur d'exécution.
+3. **Exécuter du code utilisateur = processus enfant surveillé** : répertoire temporaire dédié, timeout obligatoire, sortie capturée et limitée en taille. Jamais d'exécution sans timeout.
+4. **Multi-plateforme dès le premier jour** (Windows, macOS, Linux), même si on ne teste d'abord que sous Windows : chemins avec `Path`/`PathBuf` (jamais de `\` ou `/` en dur) ; dossiers de l'appli via `app.path()` ; exécutables trouvés avec la crate `which` ; code propre à un OS isolé par `#[cfg(target_os = "...")]` dans un module dédié ; sous Windows, processus enfant sans fenêtre console (`CREATE_NO_WINDOW`).
+5. **Gestion d'erreurs Rust** : `Result` partout, pas de `unwrap()` ni `expect()` hors initialisation ; erreurs renvoyées au front sous forme de type sérialisable avec un message lisible en français.
+6. **Sécurité** : CSP stricte dans `tauri.conf.json`, à ne desserrer que pour une raison précise et documentée. Chaque permission ajoutée à `capabilities/` est justifiée par la feature qui l'exige.
+
+## Exercices : comment ils sont vérifiés (point central du produit)
+
+Le but est que l'élève **fasse réellement la logique demandée** et ne puisse pas « sauter » l'exercice. Les garde-fous, tous testés dans `check.rs` :
+
+- **Les tests cachés ne quittent jamais le Rust.** Le front reçoit seulement l'énoncé, les exemples visibles et le code de départ (`list_exercises`). Les corrigés (`solution.*`) ne sont pas dans le binaire (lus seulement par les tests).
+- **Les tests cachés sont tirés au hasard à chaque validation** (`cases.rs`, crate `fastrand`) : quelques cas limites fixes + des cas aléatoires, avec la solution de référence qui calcule la sortie attendue. Coder les réponses en dur (même celles des exemples) échoue : le test `submit_should_not_solve_the_exercise_when_answers_are_hard_coded` le prouve pour chaque exercice.
+- **Les énoncés contiennent de vrais pièges de logique** (clé répétée dans un dictionnaire, liste vide, bornes…), et les générateurs les exercent.
+- **Deux modes** : « Tester les exemples » (rien n'est enregistré) et « Valider » (exemples puis tests cachés ; seul moyen de résoudre). Si un exemple échoue, les tests cachés ne sont pas lancés.
+- **« Résolu » est décidé et enregistré par `check_exercise`**, jamais envoyé par le front. Le code de départ, un programme vide, ou un programme qui plante ne résolvent rien (testé). Code limité à 20 000 octets ; 5 s par cas ; arrêt après 2 dépassements de temps.
+- Un test vérifie aussi que **chaque exercice a un générateur**, que ses exemples sont cohérents avec la solution de référence, et que **les corrigés de référence passent** sur plusieurs tirages (donc un exercice cassé fait échouer `npm run check`).
+
+**Ajouter un exercice** (sans code front) :
+
+1. `src-tauri/exercises/<id>/exercise.json` : `id`, `title`, `difficulty` (`easy`/`medium`/`hard`), `summary`, `topics` (thèmes filtrables, ex. `Boucles` ; en réutiliser plutôt qu'en inventer), `statement` (de quoi il s'agit), `input` et `output` (formats, Markdown court), `notes` (optionnel : pièges et indices, affichés dans l'encadré « À savoir »), `examples` (`input`/`output`), `starters` (un code de départ par langage proposé, qui lit déjà l'entrée standard et ne résout rien).
+2. `solution.py` et `solution.js` dans le même dossier.
+3. Dans `exercises.rs` : l'ajouter à `SOURCES` (et au compteur du tableau). Dans `cases.rs` : une entrée de `SPECS` avec `inputs` (cas limites fixes + aléatoires, exerçant les pièges) et `solve` (l'oracle). Préférer un format de sortie sans ambiguïté entre langages (entiers, texte) ; pour des décimales, calculer en entiers (voir `tips_solve`).
+4. Il y a 15 exercices : penser aux **formats sans ambiguïté** entre langages (entiers, mots ; jamais de décimales à arrondir sauf calcul en entiers) et aux **cas limites** qui piègent (liste vide, tous négatifs, `0`, majuscules, ordre à conserver) : les générateurs de `cases.rs` doivent les exercer.
+5. `npm run check` : les tests de cohérence, de corrigés et de triche se lancent seuls.
+
+**Progression** : table `solved(exercise, language, solved_at)` dans `progress.db` (dossier de données de l'appli, `%APPDATA%/app.synack.desktop/` sous Windows). Pour changer le schéma : ajouter une étape dans `migrate` (jamais modifier une étape déjà livrée) et incrémenter `SCHEMA_VERSION`.
+
+## Protocoles : comment ils sont validés
+
+Principe voulu par le porteur, **qui vaudra aussi pour les futurs cours** : on ne valide un contenu que si l'on a réellement retenu ce qu'il enseigne. Il n'y a pas d'autre moyen de passer. Comme pour les exercices, **c'est le Rust qui juge** (`protocols.rs`) ; le front ne reçoit jamais une réponse avant d'avoir répondu.
+
+- **Le quiz ne demande que ce que le cours enseigne** (règle du porteur : l'élève ne doit jamais se dire « c'est dit nulle part dans le cours »). Quand une question n'est pas couverte, **on corrige le cours, pas la question.** Concrètement : chaque sujet de la banque (`protocols/<id>.json`) a **une leçon du même nom** dans `src/protocols/lessons/<id>.ts`, qui énonce **les faits vrais et ceux qui réfutent chaque affirmation fausse** (ex. « le numéro d'acquittement est celui du prochain octet, pas du dernier reçu »). Les séquences à remettre en ordre ont une leçon « Dans l'ordre : … » dont les étapes sont **mot pour mot** celles du quiz. `lessons.test.ts` impose cette correspondance (un sujet sans leçon, une leçon sans question ou une chronologie différente fait échouer `npm run check`). Ajouter une affirmation à une banque = vérifier qu'une leçon l'enseigne ; ce que le test ne peut pas juger (le fond), c'est à toi de le relire.
+- **Tout ou rien** : un protocole est validé quand les **8 questions** du quiz sont justes. Une seule erreur : il reste non validé (`QUESTIONS`). Validation enregistrée dans la table `validated_protocols` (migration v3), jamais envoyée par le front.
+- **Un quiz différent à chaque essai** : les sujets tirés au hasard, l'ordre des questions mélangé, **l'ordre des options mélangé** (l'id d'une option n'est que sa position : il ne donne rien), la **formulation de la question** choisie parmi plusieurs.
+- **La négation est retournée** : à partir des mêmes faits, on demande « laquelle est vraie ? » ou « laquelle est **fausse** ? » (1 parmi 4), et « coche les affirmations vraies » ou « les **fausses** » (2 parmi 4, choix multiple, correction exacte). Les séquences sont demandées « du premier au dernier » ou **à l'envers**. Mémoriser une phrase ne suffit donc pas.
+- **Banque de contenu** (`protocols/<id>.json`) : par sujet, ≥ 3 affirmations vraies et ≥ 3 fausses (le tirage en prend 1 à 3 de chaque côté), une explication, et des séquences. 8 sujets minimum par protocole. Écrire des affirmations fausses **plausibles** (idées reçues), jamais absurdes ni détectables par un mot (« toujours », « jamais »), et vraies **sans ambiguïté**. Des tests vérifient les minimums, l'absence de doublon et la longueur.
+- **Une tentative = un quiz, répondu une fois** (`QuizSessions`, en mémoire) : on ne peut pas renvoyer des réponses d'essai en essai ; il faut redemander un quiz. Le quiz envoyé ne contient aucune réponse ni explication (testé).
+- **Après un échec**, on montre pour chaque erreur la bonne réponse et l'explication (pour apprendre), mais le quiz suivant est différent.
+- Le front (`useQuiz`, `answers.ts`) garde seulement les choix de l'élève ; la remise en ordre se fait avec des flèches (pas de glisser-déposer).
+
+## Authentification (Supabase, GitHub et Discord)
+
+L'appli **s'ouvre sur la page de connexion** (`LoginPage`) sauf si une session enregistrée est encore valide (restauration silencieuse). `App.tsx` : écran de chargement → `LoginPage` → `Shell`. Le `Shell` (et donc le chargement des exercices) n'existe qu'une fois connecté.
+
+**Flux** (OAuth pour applications natives, RFC 8252, avec PKCE) : un serveur de rappel démarre sur `127.0.0.1:53682` → le navigateur **système** s'ouvre sur `/auth/v1/authorize` de Supabase avec le `code_challenge` (S256) → après connexion chez GitHub/Discord, redirection vers `http://127.0.0.1:53682/callback?code=...` → l'appli échange le code et le `code_verifier` secret contre une session. Code : `src-tauri/src/auth/` (`pkce.rs`, `callback.rs`, `supabase.rs`, `store.rs`, `service.rs`, `user.rs`, `mod.rs` = commandes `current_user`, `sign_in`, `cancel_sign_in`, `sign_out`).
+
+**Règles de sécurité (à ne pas affaiblir)** :
+
+- **Le web view ne voit jamais un jeton.** Il reçoit seulement `AuthUser` (id, nom, avatar filtré, fournisseur). Tous les appels réseau vers Supabase sont faits par le Rust ; c'est pourquoi `connect-src` du CSP ne contient que l'IPC.
+- **Seul le jeton de rafraîchissement est conservé**, dans le **coffre du système** (Gestionnaire d'identifiants Windows, Trousseau macOS, Secret Service Linux ; crate `keyring` 3). Jamais dans un fichier ni `localStorage`. Le jeton d'accès reste en mémoire. Les jetons de rafraîchissement sont à usage unique : le nouveau remplace l'ancien à chaque restauration.
+- **PKCE** avec un verifier tiré du générateur sécurisé de l'OS (`getrandom`, jamais `fastrand`). Test avec le vecteur de la RFC 7636.
+- **Serveur de rappel** : écoute `127.0.0.1` seulement, n'accepte que `GET /callback` avec le bon `Host` (anti DNS-rebinding), page fixe sans rien reprendre de la requête, en-têtes stricts, s'arrête à la première réponse valide, délai de 180 s, annulable.
+- **Hors ligne ≠ déconnecté** : une erreur réseau ou serveur (5xx, 429) garde le jeton enregistré ; seul un refus définitif (4xx) l'efface.
+- **Déclaration d'âge (15+)** : case obligatoire sur la page de connexion, **vérifiée aussi côté Rust**, puis enregistrée côté serveur par la fonction `declare_age()` de la version web (idempotente). Si l'enregistrement échoue, la session est annulée.
+- **Avatars** : seuls les hôtes `avatars.githubusercontent.com` et `cdn.discordapp.com` en `https` passent (`user.rs`), et le CSP les autorise seuls dans `img-src`. Un test vérifie que les deux listes restent identiques.
+- **CSP** (`tauri.conf.json`) : `script-src 'self'`, pas d'`unsafe-eval`, `object-src`/`base-uri`/`form-action`/`frame-src`/`frame-ancestors` à `'none'`, aucune source générique. `style-src 'unsafe-inline'` reste nécessaire (Monaco et styles de React). Gardé par `auth/csp.rs`.
+- La clé embarquée (`src-tauri/supabase.json`) est la clé **anon** publique ; un test refuse qu'elle ait un autre rôle (jamais `service_role`).
+
+**Réglage Supabase requis** : l'URL `http://127.0.0.1:53682/callback` doit figurer dans _Authentication > URL Configuration > Redirect URLs_. Sans elle, Supabase renvoie vers le Site URL (la version web) et la connexion expire au bout de 180 s.
+
+**Points à connaître** :
+
+- Le fournisseur **e-mail est activé** sur le projet et les inscriptions sont ouvertes : n'importe qui peut créer un compte e-mail/mot de passe avec la clé publique, en contournant GitHub/Discord. Si l'appli est OAuth uniquement, le désactiver (_Authentication > Providers > Email_).
+- **La progression locale (`progress.db`) n'est pas encore liée au compte** : deux comptes sur la même machine partagent la même progression. À faire : clé par `user.id`.
+- Pas de rafraîchissement automatique du jeton d'accès avant expiration (aucun appel API ne l'utilise encore, hormis la déconnexion).
+
+**Tester sans danger** : les builds de debug lisent `SYNACK_KEYRING_ACCOUNT` pour utiliser **une autre entrée du coffre** que celle du vrai compte. **Tout test automatisé doit la définir** et ne doit jamais cliquer sur « Continuer avec GitHub/Discord » ni « Se déconnecter » sur l'instance réelle : cela ouvre le vrai navigateur et peut ouvrir ou fermer une vraie session. Pour tester l'interface sans backend : la charger dans un navigateur isolé avec un faux `window.__TAURI_INTERNALS__`. `cargo test -- --ignored keyring` teste le vrai coffre (entrée de test, nettoyée).
+
+## Onboarding (questions du premier lancement)
+
+Après la connexion, `Gate` (dans `App.tsx`) affiche `OnboardingPage` tant que le compte n'a pas répondu : niveau, centres d'intérêt (web, logiciels, cybersécurité, données et IA, jeux, systèmes, réseaux et DevOps), langages déjà connus, motivation, temps par semaine, façon d'apprendre. **Rien n'utilise encore les réponses** : elles servent plus tard aux recommandations d'exercices, de cours et de parcours.
+
+- **Rust** (`onboarding.rs`) : réponses typées par des `enum` (une valeur inventée est refusée), enregistrées dans la table `onboarding` (migration v4, **une ligne par compte**, clé `user.id`, JSON). Commandes `get_onboarding` / `save_onboarding`. Objectifs et façons d'apprendre : au moins un ; doublons retirés ; des réponses qui ne correspondent plus aux choix actuels sont traitées comme « pas encore répondu ».
+- **Front** : les questions sont des DONNÉES (`src/onboarding/questions.ts`, textes en français) ; `answers.ts` = logique pure testée ; un test impose que les choix proposés soient exactement ceux que le Rust accepte. **Ajouter une question** : un `enum` et un champ dans `onboarding.rs`, la liste dans `api/onboarding.ts`, une entrée dans `STEPS` et `ALLOWED`, `NO_ANSWERS` et `toProfile` ; les tests signalent un oubli.
+- **« Passer pour l'instant »** : valable pour la session seulement, les questions reviennent au lancement suivant. Si la lecture échoue, l'application s'ouvre quand même.
+- Pas encore : modifier ses réponses depuis le Profil (à faire quand les recommandations existeront).
+
+## Versions, mises à jour et CI/CD
+
+Tout est détaillé dans `docs/RELEASING.md` (secrets GitHub à ajouter, étapes pour publier).
+
+- **Version = SemVer** (`MAJEUR.MINEUR.PATCH[-préversion]`), écrite dans **5 fichiers** qui doivent être identiques : `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, `src-tauri/tauri.conf.json`. La logique est dans `src/release/version.ts` (typée, testée), la ligne de commande dans `scripts/version.mjs`. `npm run check` échoue si elles divergent ; **on les change avec `npm run version:set`, jamais à la main**. Le front connaît la version par `__APP_VERSION__` (Vite, depuis `package.json`). Les notes d'une version viennent de `CHANGELOG.md` (Keep a Changelog, écrites pour les élèves) : elles sont reprises dans la release GitHub et affichées dans l'application.
+- **Mise à jour automatique depuis GitHub** : plugin Tauri `updater` (le réseau est fait **en Rust**, le CSP ne bouge pas). L'application lit `https://github.com/iSweat-exe/SynAck-App/releases/latest/download/latest.json` (la dernière release **stable** : une pré-version n'est jamais proposée), vérifie la **signature** de ce qu'elle télécharge avec la clé publique de `tauri.conf.json` (`plugins.updater.pubkey`), installe, puis redémarre (`process:allow-restart`). Permissions ajoutées à `capabilities/default.json` : `updater:default` et `process:allow-restart`, et rien d'autre. **Rien n'est téléchargé ni redémarré sans un clic.** Elle cherche seule 5 s après le lancement puis toutes les 6 h, jamais en `npm run dev`.
+- **Le bouton de mise à jour** (`UpdateButton`, navbar, à gauche du groupe d'actions) est toujours visible : discret avec la version, **rose avec la nouvelle version** quand une mise à jour attend, barre qui se remplit pendant le téléchargement, vert « Redémarrer » ensuite, rouge « Réessayer » en cas d'échec. La machine d'états est pure et testée (`src/updates/state.ts`), le hook est `useUpdater` (créé dans `Shell`), les appels au plugin sont enveloppés dans `src/api/updater.ts`. **Réglages > Mises à jour** : version, état, « Vérifier maintenant », nouveautés.
+- **Clés de signature** : `.secret/updater.key` (privée), `.secret/updater.password`, `.secret/updater.key.pub`. `.gitignore` ignore `.secret/`, `*.key`, `*.pem` et `.env*`. **Ne jamais lire, afficher, copier ni commiter ces fichiers**, ni les passer dans une commande dont la sortie serait montrée. Elles sont données à GitHub en secrets (`TAURI_SIGNING_PRIVATE_KEY` et `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`). **Si la clé privée est perdue ou changée, les applications installées ne peuvent plus se mettre à jour** (réinstallation à la main) : la sauvegarder.
+- **CI** (`ci.yml`) : sur chaque pull request et chaque push sur `main`, Windows et Linux : build du front (Tauri l'embarque à la compilation) puis `npm run check`. Le job « CI gate » est la seule vérification à exiger sur `main`.
+- **Release** (`release.yml`) : pousser un tag `vX.Y.Z` **sur `main`** vérifie que le tag, les 5 fichiers et le CHANGELOG sont d'accord, construit Windows (NSIS), macOS (Intel et Apple silicon) et Linux (deb, AppImage), signe, crée la release en **brouillon**, y met `latest.json`, et ne la publie qu'une fois les quatre builds finis. Les installeurs ne sont pas signés par un certificat de développeur (SmartScreen et Gatekeeper avertissent à la première installation à la main) ; les mises à jour, elles, sont vérifiées.
+- **Migrations Supabase** (`database.yml`) : `supabase/` contient la config, les migrations, les tests et le seed, **copiés de l'ancien dépôt avec le même historique** (le projet Supabase est partagé). Sur une pull request qui touche `supabase/` : règles (une migration appliquée ne se modifie jamais, une nouvelle doit être plus récente, SQL destructif = étiquette `breaking-change`), rejeu sur une base locale et `supabase test db`. Au merge dans `main` : essai à blanc, `supabase db push` sur la production (environnement GitHub `production`), vérification qu'il ne reste rien en attente. Secrets : `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, variable `SUPABASE_PROJECT_REF`. **Une migration se crée avec `supabase migration new`, jamais en modifiant une ancienne.** L'ancien dépôt a son propre `db-migrate.yml` sur le même projet : le désactiver.
+- Les workflows n'ont pas pu être exécutés en local : leur premier passage sur GitHub peut demander un ajustement.
+
+## Données et Supabase
+
+- Le **projet Supabase de la version web est réutilisé** (mêmes comptes GitHub/Discord, mêmes tables `profiles`, rôles et permissions ; leurs migrations sont maintenant dans `supabase/migrations/` ici, voir « Versions, mises à jour et CI/CD »). La connexion est branchée (voir « Authentification ») ; classement et données en ligne viendront chacun à leur tour dans la feuille de route.
+- Application desktop = client public. **Seules les valeurs publiques** (URL du projet, clé _publishable_) peuvent figurer dans l'application. La clé `service_role` n'y apparaît jamais, et la sécurité repose sur les politiques RLS, jamais sur le client.
+- Le code tourne sur la machine de l'utilisateur : tout score ou résultat envoyé par l'application est **forgeable** (la base locale peut être modifiée à la main). Un classement devra être validé côté serveur ou assumé comme non fiable.
+- Aucun secret dans le dépôt. Un fichier `.env` n'est jamais commité.
+- Les données propres à l'utilisateur (progression, réglages) vivent d'abord en local.
+
+## Design
+
+L'identité visuelle est **fixée** et documentée dans l'ancien dépôt : `C:\Users\iswea\Desktop\SynAck\.dev\Organisation\DESIGN.md` (néo-brutaliste rose, police unique **Space Mono**, palette). La lire avant toute feature d'interface. Les polices sont embarquées dans l'application (pas de CDN).
+
+**Coque de l'application** : la **sidebar est prioritaire** : colonne de gauche sur toute la hauteur, avec le nom « SynAck » (« Ack » dans un bloc rose) puis la navigation. À droite, la navbar (**vide pour le moment**) au-dessus de la page, et la page (`.content`) **centrée** dans l'espace restant. **Pas de logo dans l'interface** (décision du porteur ; l'icône de la fenêtre et le favicon restent). La page Exercices a un panneau de filtres à gauche de la liste : recherche (insensible à la casse et aux accents, tous les mots doivent correspondre), difficulté, langage, thème, statut. Dans un groupe les choix sont des alternatives ; entre groupes tout doit correspondre. Les filtres restent quand on ouvre un exercice puis revient.
+
+**Réglages** (bouton « Réglages » dans la sidebar, au-dessus du compte) : page à sous-navigation (`SettingsScreen`, `SubNav`). Sections : **Apparence** (thème clair/sombre, `ThemeSwitch`) et **Environnement** (outils installés et tutos d'installation, ex-onglet de la sidebar). Pour ajouter un réglage : une entrée dans `SECTIONS` de `SettingsScreen.tsx` et un composant de section. « Voir comment l'installer » (page d'exercice) ouvre Réglages > Environnement. La sidebar ne contient que la navigation principale (Exercices, Protocoles) ; Réglages et le compte (avatar + nom, lien vers la page Profil) sont dans `.sidebar-footer`. À côté du nom « SynAck », une pastille **Pré-alpha** (`badge-warning`, rôle sémantique d'avertissement, pas une teinte brute) ; à retirer quand l'appli sortira de la pré-alpha. **Parcours** (parcours prêts à suivre, ex. « Développeur Fullstack », qui s'appuieront sur les réponses de l'onboarding) et **Cours** (en haut) et **Administration** (sous Réglages) sont des entrées grisées et désactivées (pointillés, bulle « Bientôt disponible ») : la section n'existe pas encore. Chaque entrée a une icône (`NavIcon`) et, pour Exercices et Protocoles, un compteur de progression (`3/15`, `2/8`). **La déconnexion est sur la page Profil**, plus dans la sidebar.
+
+**Protocoles** (bouton « Protocoles » dans la sidebar, sous Exercices) : page qui explique HTTP, HTTPS, TLS/SSL, DNS, TCP, UDP, SSH et IPC, **présentée comme les exercices** : une grille de cartes (`ProtocolList`, mêmes classes `.exercise-card`) avec le panneau de filtres à gauche (recherche, difficulté, thème, statut « À valider / Validés » ; pas de groupe Langage). Un protocole validé a l'ombre verte, le nom barré et la pastille « ✓ Validé ». Un clic ouvre `ProtocolPage` > `ProtocolPlayer` > `SequenceDiagram`. Chaque protocole commence, **juste sous son titre, par « Avant de commencer »** (`Prerequisites`) : les protocoles à connaître (puces cliquables, cochées et vertes si déjà validés ; `prerequisites`) et les notions hors cours (`notions`), ou « Aucun prérequis : tu peux commencer ici ». Les cartes de la liste en donnent une ligne (« Avant : TCP, 1 notion de base »). Un prérequis protocole vient toujours **avant** dans `catalog.ts` (testé : ordre de lecture, pas de cycle). Puis : « Pas à pas » (schéma + lecteur), « À quoi ça sert », **« Le cours en détail » (une carte par sujet du quiz, `LessonCard`)**, « À retenir », « En bref », **« Valider ce protocole » (le quiz)**, « À lire ensuite ». Les filtres restent quand on ouvre un protocole puis revient. Le schéma est un **diagramme de séquence en SVG** : une colonne par acteur, une ligne par étape, qui se construit pendant la lecture (flèche tracée, paquet qui voyage, étiquette qui apparaît ; les étapes passées restent dessinées). Le lecteur joue seul (3,2 s par étape), avec Précédent / Pause / Suivant, des pastilles d'étapes numérotées et, quand un protocole le prévoit, **« Simuler une perte de paquet »** (une étape devient : message perdu ✕, délai dépassé, renvoi). La note de l'étape courante est dans un rail collant à droite. `prefers-reduced-motion` : pas de lecture automatique, animations neutralisées. Les couleurs de message sont des rôles (`--ink`, `--brand-bevel`, `--success-fg`, `--warning-fg`, `--danger-fg`).
+
+- **Ajouter un protocole** : `src/protocols/data/<id>.ts` (acteurs, étapes, texte, `difficulty`, `topics`, `prerequisites`, `notions`) et une ligne dans `catalog.ts` ; **et** sa banque de questions `src-tauri/protocols/<id>.json` avec une ligne dans `SOURCES` de `protocols.rs` (compteur du tableau compris). Aucun composant à toucher. Un test compare les ids du catalogue et les fichiers de banques. `catalog.test.ts` vérifie les ids, les acteurs, les liens « À lire ensuite » et que **chaque libellé tient sur sa flèche** (avec et sans perte) : si un libellé est trop long, le test le dit (budget ≈ 9,8 unités par caractère).
+- **Contenu juste avant tout** : adresses d'exemple en `example.com` et `203.0.113.x` (plages réservées à la documentation) ; TLS présenté en version 1.3 ; SSL signalé comme ancien nom (SSL 2/3 et TLS 1.0/1.1 abandonnés).
+
+**Thème sombre = un crépuscule, pas une nuit** (le sombre noir/blanc fatiguait les yeux). Palette dédiée, pas une inversion : fonds gris-prune chauds (`#2b2733`, cartes `#353040`), texte blanc cassé `#e7e1ec` (≈ 10:1 de contraste, contre 16:1 pour du blanc sur noir qui éblouit), contours lavande `#b5abc1`, rose de marque adouci (`--brand` `#e48bb9`), tons sémantiques sourds (fonds sombres, textes doux), **ombre dure plus sombre que le fond** (du noir ne se verrait pas). Règles pour toucher aux couleurs :
+
+- **Les composants n'utilisent jamais une teinte brute** (`--primary-400`, `--success-500`...) : seulement des **rôles** (`--brand`, `--brand-bevel`, `--success-accent`, `--danger-accent`, `--warning-accent`, `--knob-off`, `--ink`, `--surface`...). Chaque thème règle ses rôles dans `tokens.css`. Ajouter une couleur = ajouter un rôle dans les deux thèmes.
+- Le bloc sombre de `tokens.css` est **explicite** (pas de `neutral-950/50`) ; Monaco recopie les mêmes valeurs dans `editor/setup.ts` (il ne lit pas le CSS) : les changer ensemble.
+- Les images CSS ne lisent pas les variables : le fond pointillé de la page de connexion a une version par thème.
+- **`src/theme/design-tokens.test.ts`** lit `tokens.css` et vérifie les contrastes des deux thèmes (texte ≥ 7:1 et ≥ 4,5:1 pour l'atténué, tons sémantiques, contours ≥ 3:1), plus des **plafonds pour le sombre** : fond non noir, texte < 12:1, jamais de blanc pur, ombre plus sombre que le fond. Changer une couleur, lancer `npm test`.
+
+**Thème clair/sombre** : le choix est mémorisé (`localStorage`) ; tant que l'utilisateur n'a pas choisi, on suit le thème du système (`resolveTheme`, testé). Monaco a ses deux thèmes (`synack-light`/`synack-dark`).
+
+**Implémentation du thème** : `src/theme/tokens.css` (palette + rôles clair/sombre, toute couleur vient de là), `src/theme/components.css` (`.btn .btn-primary .btn-secondary`, `.tab`, `.field`, `.card`, `.badge`, `.alert`, `.output`, `.switch`, `.exercise-card`...), `src/theme/theme.ts` (voir « Thème clair/sombre »), `src/index.css` (base et mise en page). Un composant n'utilise jamais une teinte brute (`--primary-400`...) mais un rôle (`--surface`, `--ink`, `--outline`...), sauf pour les remplissages de marque. Space Mono vient de `@fontsource/space-mono` (4 variantes latin, accents français vérifiés). Monaco a ses deux thèmes `synack-light`/`synack-dark` dans `src/editor/setup.ts` (mêmes valeurs que les tokens). **Page d'exercice** : l'objectif (énoncé) et l'éditeur sont les deux choses qui comptent. Colonnes 0,85 / 1,4 (l'éditeur a la plus grande), éditeur haut de `clamp(26rem, 64vh, 52rem)`. **La fenêtre** s'ouvre en 1360×820 (minimum 1000×600). **L'anneau de focus clavier est visible** (`--focus-ring` = `--ink` dans `tokens.css`, règle `:focus-visible` globale dans `components.css`) : un clavier doit toujours voir où il est. Il ne s'affiche pas au clic souris.
+
+**Logo** : la source est `docs/design/logo.png` (2048×2048, fond transparent) et **remplace** le logo de l'ancien dépôt. Les icônes de l'application (`src-tauri/icons/`) en sont générées avec `npm run tauri icon docs/design/logo.png` (puis supprimer les dossiers `android/` et `ios/` créés, hors cible). `public/favicon.png` (64 px) en est une réduction ; le logo n'est plus affiché dans l'interface. Si l'icône de l'exécutable ne change pas après une régénération, toucher `src-tauri/build.rs` pour forcer la recompilation des ressources.
+
+## Conventions
+
+- **Conversation en français.** Code, identifiants, commits et noms de fichiers en **anglais**. Textes affichés à l'utilisateur en **français**.
+- **Rust** (config dans `src-tauri/Cargo.toml`, section `[lints]`, et `clippy.toml`) :
+  - `unsafe_code` interdit ; clippy `all` + `pedantic` en avertissement, `unwrap`/`expect`/`panic`/`todo`/`dbg!` refusés (autorisés dans les tests). Le seul `expect` autorisé est celui du démarrage de `run()`, avec `#[expect(..., reason = "...")]`. Utiliser `#[expect]` plutôt que `#[allow]`, toujours avec une raison.
+  - Emprunter (`&str`, `&[T]`, `&Path`) plutôt que cloner ; pas de `.clone()` « pour faire taire le compilateur ».
+  - Erreurs : `thiserror` pour les types d'erreur, `?` pour propager, pas d'`anyhow` (les erreurs doivent être sérialisables vers le front).
+  - Tests nommés par comportement (`submit_should_not_solve_the_exercise_when_the_program_is_empty`), une assertion par test quand c'est possible. `///` pour documenter l'API publique ; `//` pour le pourquoi.
+- **Front** (config : `tsconfig.json`, `eslint.config.js`, `.prettierrc.json`) :
+  - TypeScript très strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`). Pas de `any`, pas de `as` pour contourner un type : valider ou rétrécir. `import type` pour les types.
+  - React : composants petits (un rôle chacun, à scinder vers 200 lignes), composition par `children`, Hooks au niveau racine, dépendances de `useEffect` honnêtes (le lint `react-hooks` les vérifie), un `useEffect` = une seule responsabilité.
+  - Pas d'état dérivé dans un `useEffect` : le calculer pendant le rendu. Pas d'index seul comme `key` dans une liste réordonnable. Pas de `useMemo`/`memo` sans problème mesuré.
+  - Un `invoke` Tauri est encapsulé dans une fonction typée (`src/api/`) : les composants n'appellent jamais `invoke` en direct.
+  - Pas de bibliothèque d'état ou de fetch (Zustand, React Query...) tant qu'une feature ne l'exige pas : `useState`/`useReducer` suffisent.
+- **Lisibilité** (règles nées d'un vrai problème : tout en Space Mono, sans hiérarchie, donnait des pavés illisibles ; la police reste unique, c'est la structure qui porte la lecture) :
+  - **Une seule bordure épaisse par niveau.** Les cartes ont le cadre de 2 px et l'ombre dure ; ce qui est _dedans_ (code, entrées, sorties) est un **encart** `.snippet` : fond plus foncé (`--inset`) et trait fin de 1 px (`--hairline`), jamais un second cadre épais.
+  - **Les sections se distinguent par une étiquette**, pas par du gras dans un paragraphe : `.label` (gras, couleur atténuée, casse normale : pas de capitales espacées, selon `frontend-design`) ; séparateurs en **pointillés** comme sur un ticket. Un énoncé est une _structure_ (intro, ENTRÉE/SORTIE, À SAVOIR, exemples), jamais un seul bloc de texte.
+  - **Corps du texte** : 15 px, interligne 1,7. Pas de gros blocs de couleur criarde : un statut est une **pastille** (`.badge`) ; un encadré plein est réservé au verdict final.
+  - **Les résultats sont compacts** : un test réussi tient sur une ligne ; seul un échec se déplie, avec **la première ligne fautive pointée** (calculée côté Rust, `LineDiff`), les sorties **numérotées**, attendu en vert et obtenu en rouge, et une **fenêtre** de quelques lignes autour de l'erreur (jamais 100 lignes d'un coup).
+  - Toute zone qui apparaît sous l'éditeur est ramenée dans la vue à la fin d'un test.
+- **Navbar, à droite** (`NavbarActions`) : recherche (Ctrl K), série de jours, pièces, bonus (cadeau), notifications sont des **maquettes grisées** (bouton désactivé, contour en pointillés, bulle « Bientôt disponible ») ; fonctionnent pour de vrai : la **barre d'XP** (`src/xp.ts`, testé : facile 10, moyen 20, difficile 30 par exercice résolu ou protocole validé, compté une fois quel que soit le langage ; 100 XP par niveau) et le bouton soleil/lune (thème). L'XP est calculée dans le front à partir de la progression locale : c'est de l'affichage, pas un score envoyé quelque part. Chacune est une feature à construire plus tard (voir « Idées » de la feuille de route).
+
+**Fil d'Ariane** : dans la navbar (`Breadcrumb`, construit dans `Shell` de `App.tsx`). Exercices > <exercice>, Protocoles > <protocole>, Profil, Réglages > <section> ; tous les maillons sauf le dernier sont cliquables. L'exercice et le protocole ouverts sont donc gardés par `Shell` (`exerciseId`, `protocolId`), pas par leurs écrans ; choisir une section dans la sidebar ramène à sa liste.
+
+**Vie des pages** : (1) **pièces** : un compteur de pièces dans la navbar, maquette grisée pour l'instant (elles serviront à obtenir des bonus). (2) **Fond animé par page** (`PageBackground`, `.page-bg-<page>` dans `components.css`) : une couche fixe à droite de la sidebar, sous la page, qui glisse d'**une tuile exacte** en 40 à 90 s (boucle sans couture, environ 0,7 px/s : on le sent sans le voir). Exercices : points ; Protocoles : diagonales ; Profil : anneaux ; Réglages : papier millimétré. Couleur = `--hairline` à 55 % d'opacité, donc les deux thèmes suivent ; `prefers-reduced-motion` le fige. Un nouveau fond : une classe `.page-bg-<id>` (`--tile`, `--dx`, `--dy`, `--drift`) et l'id dans `BackgroundId`. (3) **Icônes animées** : `AnimatedSvg` joue l'état `hover` d'une icône quand le bouton, lien ou label qui la contient est survolé (rien sur un bouton désactivé) ; chaque icône a son geste (cloche qui sonne, flamme qui vacille, soleil qui tourne...) dans `NavIcon`. Les icônes de marque et les chevrons du quiz l'utilisent aussi. Aucune bibliothèque de plus : `motion` suffit.
+
+**Récompenses** : valider un exercice ou un protocole pour la première fois rapporte de l'**XP** (10, 20, 30 selon la difficulté) et des **pièces** (5, 10, 15) ; `rewardOf` dans `src/xp.ts`, testé. Les pièces sont un vrai compteur dans la navbar (`CoinCounter`), calculé comme l'XP à partir de la progression locale (rien à dépenser pour l'instant). **La navbar célèbre le gain** : `Shell` émet un `Gain` (`onReward`) **avant** de relire la progression, puis `usePlayback` lance la célébration quand le nouveau total arrive (un total qui change sans gain, comme la première lecture au lancement, s'affiche tout de suite, sans fête). `XpBar` : la barre se remplit, une lumière la balaye, elle gonfle, une étiquette « +20 XP » flotte dessous ; un passage de niveau la remplit, la vide et fait éclater « Niv. N ». `CoinCounter` : la pièce tourne en 3D, des points jaillissent (`Burst`), le chiffre roule (`CountUp`), « +10 » flotte. Le panneau de réussite de l'exercice affiche aussi « +20 XP » et « +10 pièces » (seulement la première fois : refaire un exercice déjà résolu ne rapporte rien). Chaque gain est aussi annoncé aux lecteurs d'écran (`role="status"`).
+
+**Résolu = un fait sur l'exercice, pas sur un langage** (décision du porteur) : l'élève valide avec le langage qu'il veut et **le logiciel ne le pousse jamais à le refaire dans les autres** (aucun « défi dans l'autre langage », aucun « résolu en Python »). Les textes sont génériques (« Résolu », « Exercice déjà résolu »). La base garde `(exercice, langage)` (utile plus tard pour les statistiques) mais l'interface n'en tire que « résolu ou non ». **Page d'exercice** (ajouts) : un exercice déjà résolu montre une **bannière verte collante** (`.solved-banner`, reste sous la navbar pendant le défilement : on le voit sans scroller) qui dit simplement « Exercice déjà résolu ». Le bouton **« Réinitialiser le code »** (à droite du choix du langage, grisé quand le code est déjà celui de départ) remet le code de départ du langage courant **sans toucher à la progression** ; un message « Code réinitialisé. Annuler » reste 10 s pour le remettre (annuler, plutôt que demander confirmation à chaque fois). Les gains de pièces **roulent** (`CountUp`) : le compteur, l'étiquette « +10 » et la pastille du panneau de réussite.
+
+**Boutique** : cliquer sur le compteur de pièces de la navbar ouvre la boutique (`ShopDialog`), une **fenêtre flottante par-dessus toute l'appli, avec une marge de 1,5 rem sur les quatre bords**, qui assombrit légèrement le fond. C'est un `<dialog>` natif (`showModal`) : le navigateur garde le focus dedans, Échap la ferme, la page derrière devient inerte ; elle apparaît en fondu et glissement (`transition-behavior: allow-discrete`, sans animation sur un moteur qui ne sait pas), le défilement de la page est bloqué, un clic sur la zone sombre la ferme. Trois rayons : **Thèmes de l'application** (Menthe, Océan, Soleil), **Bonus** (double XP, double pièces, gel de série, indice), **Profil** (cadre doré, titre). Le catalogue est une donnée (`src/shop/catalog.ts`, testé). **Rien ne s'achète encore** : les boutons « Acheter » sont désactivés (« Achats bientôt disponibles »), mais le solde est réel et chaque carte dit s'il manque des pièces. Un vrai achat demandera une table de dépenses côté Rust (le solde sera gagné moins dépensé) : le front ne décidera pas. **Illustrations : pixel art noir et blanc** (décision du porteur), dessiné en sprites 16×16 (`src/shop/sprites.ts` : `#` encre, `o` papier, `.` vide) et affiché par `ShopArt` ; encre et papier sont des rôles (`--ink`, `--surface`), donc les dessins s'inversent en thème sombre. Les pixels ont une taille entière (6 px) et bougent par sauts d'un pixel au survol de la carte.
+
+**Mouvement** : deux outils, chacun pour un rôle. (1) Les **transitions de page** sont celles de React (`<ViewTransition>`, sans dépendance ; `src/transitions.ts` : `navigate(update, direction?)` lance le changement dans une transition). Entre sections (Exercices, Protocoles, Profil, Réglages) : fondu court (`page-in`/`page-out`). Entre une liste et son détail : glissement latéral selon le sens (`DepthTransition`, `nav-forward`/`nav-back`). Un `setState` simple n'anime pas : tout changement de page passe par `navigate`. (2) **`motion`** (ex-Framer Motion) pour ce que le CSS ne sait pas faire : la pastille de navigation qui glisse d'un élément à l'autre (`NavItem`, `layoutId`) et le tracé de la coche (`CheckIcon draw`, réservé aux moments gagnés). `<MotionConfig reducedMotion="user">` à la racine ; les transitions de vue sont coupées par `prefers-reduced-motion`.
+
+**Retour d'état** (un exercice résolu doit se voir, partout) :
+
+- **Liste** : une carte résolue a une **ombre verte** (`--card-shadow`), un **titre barré** (trait vert) et une pastille « ✓ Résolu ». Les cartes non résolues gardent l'ombre noire.
+- **Page d'exercice** : bannière « Exercice déjà résolu » (collante), **cadre de l'éditeur à ombre verte**, et à la réussite un **panneau de réussite** (`SolvedFeedback`) : coche, message, nombre de tests cachés passés, **avancement global** (barre + « n / 15 »), bouton **« Exercice suivant »** (prochain non résolu, en bouclant : `nextUnsolved`, testé) et retour à la liste. Ce panneau remplace l'ancienne simple alerte.
+- **Animation** : le panneau est un événement rare et important, donc mis en scène (entrée par glissement de 8 px, pastille qui apparaît en `scale 0,25→1` + `blur 4→0` + opacité, enfants décalés de 100 ms, courbe `cubic-bezier(0.2, 0, 0, 1)`). Aucune animation sur les actions fréquentes. `prefers-reduced-motion` la neutralise.
+- Les icônes sont des SVG en `currentColor` (`CheckIcon`), trait 2 px à côté d'un texte gras.
+- **Finitions d'interface** : rayons concentriques (rayon extérieur = rayon intérieur + padding) ; jamais `transition: all`, toujours les propriétés listées ; bouton : survol = léger glissement vers l'ombre, appui = enfoncement complet (comme dans `DESIGN.md`, qui prime sur `scale(0.96)`) ; zones cliquables d'au moins 40×40 px ; classe `tabular-nums` sur tout nombre qui change (compteur, score) ; pas d'animation sur les actions très fréquentes ; l'animation n'est jamais le seul retour (toujours aussi une couleur, une icône ou un libellé).
+- Une commande Tauri = un module Rust clair, avec son type d'entrée et de sortie ; le type TypeScript correspondant est dans `src/api/`.
+- Commits courts au format Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`), un commit par étape qui fonctionne. Ne commiter que sur demande du porteur.
+- Commentaires seulement pour expliquer le **pourquoi** non évident.
+
+## Où en est-on
+
+Voir `docs/ROADMAP.md` : c'est la source de vérité. État actuel : l'appli propose **15 exercices** en Python et JavaScript (faciles : Fibonacci, dictionnaire, liste, FizzBuzz, plus grand nombre, voyelles, palindrome, factorielle, inversion de mots ; moyens : pourboires, nombres premiers, comptage de mots, doublons, rendu de monnaie, chiffre de César), avec vérification par tests cachés aléatoires, progression locale, écran Environnement (outils installés + tutos d'installation) thème clair/sombre (réglable), page Réglages, et une page **Protocoles** : 8 protocoles présentés comme les exercices (cartes, filtres), expliqués avec des schémas animés, et **validés par un quiz** qu'il faut réussir en entier (quiz différent à chaque essai, jugé par le Rust).
+
+À savoir : C et C++ sont vérifiés pour de vrai (MSYS2 UCRT64, `gcc` 16) par des tests de compilation et d'exécution ; les exercices ne proposent encore que Python et JavaScript. La CSP (`tauri.conf.json`) autorise `worker-src blob:` et `font-src data:` pour Monaco, et `connect-src ipc:` pour le canal Tauri. `monaco-editor` est épinglé en 0.56.0 avec `dompurify` forcé par `overrides` (0 faille `npm audit`) : ne pas monter Monaco sans refaire `npm audit`. L'installeur embarque tous les langages Monaco et leurs workers (~9 Mo inutiles) : optimisation possible plus tard. Les cours Markdown de l'ancienne version ont été retirés du dépôt (ils existent toujours dans l'ancien dépôt).

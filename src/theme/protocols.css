@@ -1,0 +1,638 @@
+/* The Protocoles page: text, then an animated sequence diagram drawn in SVG. */
+
+.protocols-page {
+  max-width: 90rem;
+  margin: 0 auto;
+}
+
+.protocol {
+  display: grid;
+  gap: 2rem;
+}
+
+.protocol-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  font-size: 1.6rem;
+}
+
+.protocol-full {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.protocol-tagline {
+  margin: 0.5rem 0 0;
+  font-size: 1.05rem;
+}
+
+.protocol section {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.protocol section p {
+  margin: 0;
+  max-width: 80ch;
+}
+
+h4.label {
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+
+.protocol-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.protocol-summary ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.protocol-facts {
+  display: grid;
+  margin: 0;
+}
+
+.protocol-facts div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) 1fr;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-top: var(--u) dashed var(--hairline);
+}
+
+.protocol-facts div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.protocol-facts dt {
+  color: var(--muted);
+}
+
+.protocol-facts dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* The player: controls, the diagram, then the explanation of the current step. */
+
+.player {
+  display: grid;
+  gap: 1rem;
+}
+
+.player-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.player-diagram {
+  padding: 0.75rem;
+}
+
+/* The diagram on the left, the explanation of the current step in a rail that follows the scroll. */
+.player-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.player-note {
+  position: sticky;
+  top: calc(var(--navbar-height) + 1.5rem);
+  display: grid;
+  gap: 0.5rem;
+  animation: seq-fade 0.15s ease-out;
+}
+
+.player-note p {
+  margin: 0;
+}
+
+.player-note-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* The numbered steps: a row of small squares, the current one filled. Those to come are dimmed. */
+.player-steps ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-step {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: var(--u) solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.player-step:hover {
+  border-color: var(--outline);
+}
+
+.player-step[data-future="true"] {
+  color: var(--muted);
+}
+
+.player-step[aria-current="step"] {
+  border-color: var(--outline);
+  background: var(--brand);
+  color: var(--on-primary);
+}
+
+/* The diagram. Colors are roles, and a message is never told apart by color alone: it has a label. */
+
+.seq {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.seq-lifeline {
+  stroke: var(--hairline);
+  stroke-width: 2;
+  stroke-dasharray: 5 6;
+}
+
+.seq-actor {
+  fill: var(--surface-raised);
+  stroke: var(--outline);
+  stroke-width: 2;
+}
+
+.seq-actor-name {
+  fill: var(--ink);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.seq-actor-role {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.seq-state rect {
+  fill: var(--secondary-bg);
+  stroke: var(--outline);
+  stroke-width: 1.5;
+}
+
+.seq-state text {
+  fill: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.seq-state {
+  animation: seq-fade 0.2s ease-out;
+}
+
+.seq-tone-neutral {
+  --tone: var(--ink);
+  --tone-bg: var(--surface-raised);
+}
+
+.seq-tone-brand {
+  --tone: var(--brand-bevel);
+  --tone-bg: var(--secondary-bg);
+}
+
+.seq-tone-success {
+  --tone: var(--success-fg);
+  --tone-bg: var(--success-bg);
+}
+
+.seq-tone-warning {
+  --tone: var(--warning-fg);
+  --tone-bg: var(--warning-bg);
+}
+
+.seq-tone-danger {
+  --tone: var(--danger-fg);
+  --tone-bg: var(--danger-bg);
+}
+
+.seq-line,
+.seq-cross {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.seq-head {
+  fill: var(--tone);
+}
+
+.seq-label {
+  fill: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.seq-band {
+  fill: var(--tone-bg);
+  opacity: 0.55;
+}
+
+.seq-box rect {
+  fill: var(--tone-bg);
+  stroke: var(--tone);
+  stroke-width: 2;
+}
+
+.seq-box-wait rect {
+  stroke-dasharray: 5 4;
+}
+
+/* The step being played: the arrow is drawn, a packet travels along it, then the label appears. */
+
+.seq-row-current .seq-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: seq-draw 0.7s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+.seq-row-current .seq-head,
+.seq-row-current .seq-cross,
+.seq-row-current .seq-label {
+  animation: seq-appear 0.3s cubic-bezier(0.2, 0, 0, 1) 0.55s backwards;
+}
+
+.seq-row-current .seq-box {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop 0.3s cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+
+.seq-packet {
+  fill: var(--tone);
+  animation: seq-travel 0.7s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+@keyframes seq-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes seq-travel {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(var(--dx));
+  }
+}
+
+@keyframes seq-appear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes seq-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 64rem) {
+  .player-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .player-note {
+    position: static;
+  }
+}
+
+/* The protocol page header, the quiz that ends it, and the cards that list the protocols. */
+
+.protocols-progress {
+  margin: 0;
+  color: var(--muted);
+}
+
+.protocol-header {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+}
+
+.protocol-title .badge {
+  align-self: center;
+}
+
+.quiz,
+.quiz-failed,
+.quiz-review {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-intro {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+}
+
+.quiz-intro p {
+  margin: 0;
+  max-width: 70ch;
+}
+
+.quiz-question {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.quiz-question legend {
+  padding: 0 0.5rem;
+  background: var(--surface);
+}
+
+.quiz-prompt {
+  margin: 0;
+  font-weight: 700;
+}
+
+.quiz-options {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* An option is a whole row you can press, not just the small box. */
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--inset);
+  cursor: pointer;
+  transition-property: background-color, border-color;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.quiz-option:hover {
+  border-color: var(--outline);
+}
+
+.quiz-option:has(input:checked) {
+  border-color: var(--outline);
+  background: var(--secondary-bg);
+}
+
+.quiz-option input {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0.3rem 0 0;
+  accent-color: var(--brand-bevel);
+}
+
+.quiz-order {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-order-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--inset);
+}
+
+.quiz-order-number {
+  flex: none;
+  min-width: 1.25rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.quiz-order-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.quiz-order-moves {
+  display: flex;
+  flex: none;
+  gap: 0.5rem;
+}
+
+.quiz-move {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  padding: 0;
+}
+
+.quiz-submit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.quiz-verdict {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+
+.quiz-verdict p {
+  margin: 0;
+}
+
+.quiz-verdict-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.quiz-review .card {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.quiz-review .label,
+.quiz-review p {
+  margin: 0;
+}
+
+.quiz-answer {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--success-fg);
+}
+
+.quiz-why {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Below the navbar, which sticks to the top of the window. */
+.quiz-result {
+  scroll-margin-top: calc(var(--navbar-height) + 1rem);
+}
+
+/* The detailed course: one card per subject of the quiz. */
+
+.protocol-lessons-intro {
+  color: var(--muted);
+}
+
+.lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.lesson {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.lesson-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.lesson-points,
+.lesson-steps {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.lesson-steps {
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--inset);
+}
+
+/* More specific than `.card ol`, which would take back the padding and the margin. */
+.lesson .lesson-steps {
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+}
+
+/* The prerequisites, right under the title of a protocol: seen at a glance. */
+
+.prerequisites {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: var(--u) dashed var(--outline);
+  border-radius: var(--radius-lg);
+}
+
+.prerequisites p {
+  margin: 0;
+}
+
+.prerequisites-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prerequisite {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* A prerequisite already validated is green, and ticked: the colour is never alone. */
+.prerequisite[data-done="true"] {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.prerequisite-notion {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--inset);
+  font-size: 0.85rem;
+}
+
+/* A validated protocol is a rare, earned moment: its check appears the way the solved panel's does. */
+.quiz-verdict.alert-success .icon {
+  animation: pop 0.3s cubic-bezier(0.2, 0, 0, 1) 0.1s both;
+}

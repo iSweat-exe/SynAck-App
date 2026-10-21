@@ -1,0 +1,113 @@
+import { sshLessons } from "../lessons/ssh";
+import type { Protocol } from "../types";
+
+export const ssh: Protocol = {
+  id: "ssh",
+  name: "SSH",
+  fullName: "Secure Shell",
+  tagline: "Prendre la main sur une machine distante, en sécurité.",
+  difficulty: "hard",
+  topics: ["Sécurité", "Administration"],
+  prerequisites: ["tcp", "tls"],
+  notions: ["Savoir ce qu'est un terminal (la ligne de commande)"],
+  purpose: [
+    "SSH ouvre un canal chiffré vers un serveur pour y exécuter des commandes, copier des fichiers (scp, sftp) ou relayer d'autres connexions. Il a remplacé Telnet et rlogin, qui envoyaient les mots de passe en clair.",
+    "Comme TLS, il commence par un échange de clés pour chiffrer. Mais il n'y a pas d'autorité de certification : à la première connexion, tu acceptes l'empreinte de la clé du serveur, qui est mémorisée dans known_hosts. Si elle change plus tard, SSH te prévient bruyamment : ce peut être une attaque de l'homme du milieu.",
+    "Pour s'authentifier, on utilise surtout une paire de clés : la clé privée reste chez toi, la clé publique est posée sur le serveur (authorized_keys). Aucun secret ne voyage.",
+  ],
+  takeaways: [
+    "La clé de l'hôte prouve l'identité du serveur, et known_hosts s'en souvient.",
+    "La clé privée ne quitte jamais ta machine : seule une signature est envoyée.",
+    "Une alerte « REMOTE HOST IDENTIFICATION HAS CHANGED » ne se contourne pas sans comprendre pourquoi.",
+    "Le même canal sert pour un terminal, des fichiers ou des tunnels.",
+  ],
+  facts: [
+    { label: "Couche", value: "Application (7)" },
+    { label: "Port", value: "22" },
+    { label: "Transport", value: "TCP" },
+    { label: "Authentification", value: "Clé (conseillé) ou mot de passe" },
+  ],
+  lessons: sshLessons,
+  actors: [
+    { id: "client", name: "Client", role: "ssh alice@serveur" },
+    { id: "server", name: "Serveur", role: "sshd, port 22" },
+  ],
+  steps: [
+    {
+      from: "client",
+      to: "server",
+      label: "Version SSH",
+      note: "Après la connexion TCP, chaque côté s'annonce en clair avec la version du protocole.",
+      detail: "SSH-2.0-OpenSSH_9.6",
+    },
+    {
+      from: "client",
+      to: "server",
+      label: "Algorithmes proposés",
+      note: "Le client liste les algorithmes qu'il sait utiliser. Le serveur choisira les meilleurs qu'ils ont en commun.",
+      detail:
+        "échange de clés: curve25519-sha256\nclé d'hôte: ssh-ed25519\nchiffrement: chacha20-poly1305",
+    },
+    {
+      from: "server",
+      to: "client",
+      label: "Clé d'hôte + échange",
+      note: "Le serveur envoie sa clé d'hôte (sa carte d'identité) et sa moitié de l'échange de clés, signée avec la clé privée de l'hôte.",
+      detail: "clé d'hôte: ssh-ed25519 AAAAC3Nz…\nclé éphémère du serveur\nsignature",
+    },
+    {
+      from: "client",
+      to: "client",
+      label: "Vérifie la clé d'hôte",
+      note: "Le client regarde dans known_hosts. Serveur inconnu : il te demande de confirmer l'empreinte. Clé différente de celle mémorisée : alerte, car quelqu'un se fait peut-être passer pour le serveur.",
+      detail: "SHA256:uNiV3rs4l…  (à comparer à l'empreinte officielle)",
+      tone: "warning",
+    },
+    {
+      from: "server",
+      to: "client",
+      label: "NEWKEYS",
+      note: "Les deux côtés ont calculé le même secret. Ils basculent sur le chiffrement : tout ce qui suit est illisible de l'extérieur.",
+      tone: "success",
+      states: { client: "Chiffré", server: "Chiffré" },
+    },
+    {
+      from: "client",
+      to: "server",
+      label: "Clé publique offerte",
+      note: "Reste à prouver qui tu es. Le client présente la clé publique de alice, sans rien prouver encore.",
+      detail: "utilisateur: alice\nméthode: publickey\nclé: ssh-ed25519 AAAAC3Nz…",
+    },
+    {
+      from: "server",
+      to: "client",
+      label: "Clé connue, signez",
+      note: "Le serveur trouve cette clé dans authorized_keys d'alice. Il demande maintenant la preuve qu'on possède la clé privée.",
+      detail: "SSH_MSG_USERAUTH_PK_OK",
+    },
+    {
+      from: "client",
+      to: "server",
+      label: "Signature de session",
+      note: "Le client signe, avec sa clé privée, des données qui contiennent l'identifiant unique de cette session. La clé privée ne part jamais, et la signature ne peut pas être rejouée dans une autre session.",
+      detail: "signature ed25519 de (identifiant de session, utilisateur, …)",
+    },
+    {
+      from: "server",
+      to: "client",
+      label: "Accès accordé",
+      note: "Le serveur vérifie la signature avec la clé publique. Tu es connecté.",
+      tone: "success",
+      states: { client: "Connecté", server: "Connecté" },
+    },
+    {
+      from: "client",
+      to: "server",
+      label: "Commande (chiffrée)",
+      note: "Tu peux enfin exécuter des commandes. Tout passe dans le canal chiffré.",
+      detail: "exec: ls -la /var/www",
+      tone: "brand",
+    },
+  ],
+  related: ["tls", "tcp"],
+};

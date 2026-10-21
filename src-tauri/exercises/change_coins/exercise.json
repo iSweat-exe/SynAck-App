@@ -1,0 +1,28 @@
+{
+  "id": "change_coins",
+  "title": "Rendre la monnaie",
+  "difficulty": "medium",
+  "summary": "Rends une somme avec le moins de pièces possible.",
+  "topics": [
+    "Boucles",
+    "Calculs"
+  ],
+  "statement": "Tu rends la monnaie avec des pièces de **50, 20, 10, 5, 2 et 1** (en quantité illimitée), en utilisant **le moins de pièces possible**. Commence toujours par la plus grande pièce possible.",
+  "input": "Un entier `somme` (1 ≤ somme ≤ 500).",
+  "output": "Une ligne par pièce **utilisée**, de la plus grande à la plus petite, au format `pièce: nombre` :\n\n```plaintext\n50: 1\n5: 1\n2: 1\n```",
+  "notes": "N'affiche pas les pièces que tu n'utilises pas.",
+  "examples": [
+    {
+      "input": "57\n",
+      "output": "50: 1\n5: 1\n2: 1"
+    },
+    {
+      "input": "3\n",
+      "output": "2: 1\n1: 1"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nsomme = int(lines[0])\n\n# Affiche une ligne « pièce: nombre » par pièce utilisée.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst somme = Number(lines[0]);\n\n// Affiche une ligne « pièce: nombre » par pièce utilisée.\n"
+  }
+}

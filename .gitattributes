@@ -1,0 +1,8 @@
+# One line ending everywhere (LF), whatever the developer's Git setting: Prettier and the CI check for it.
+* text=auto eol=lf
+
+# Binary files are left alone.
+*.png binary
+*.ico binary
+*.icns binary
+*.webp binary

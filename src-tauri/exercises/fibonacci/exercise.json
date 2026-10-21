@@ -1,0 +1,27 @@
+{
+  "id": "fibonacci",
+  "title": "Suite de Fibonacci",
+  "difficulty": "easy",
+  "summary": "Affiche les n premiers termes de la suite de Fibonacci.",
+  "topics": [
+    "Boucles",
+    "Suites"
+  ],
+  "statement": "La **suite de Fibonacci** commence par `0` et `1`, puis chaque terme est la **somme des deux précédents** : `0, 1, 1, 2, 3, 5, 8, 13…`",
+  "input": "Un entier `n` (1 ≤ n ≤ 40), sur une ligne.",
+  "output": "Les `n` premiers termes de la suite, séparés par **un espace**, sur une seule ligne.",
+  "examples": [
+    {
+      "input": "7\n",
+      "output": "0 1 1 2 3 5 8"
+    },
+    {
+      "input": "1\n",
+      "output": "0"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\n\n# Affiche les n premiers termes, séparés par des espaces.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\n\n// Affiche les n premiers termes, séparés par des espaces.\n"
+  }
+}

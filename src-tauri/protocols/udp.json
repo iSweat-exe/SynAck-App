@@ -1,0 +1,154 @@
+{
+  "topics": [
+    {
+      "subject": "la connexion",
+      "truths": [
+        "UDP n'ouvre aucune connexion avant d'envoyer.",
+        "Le premier paquet envoyé contient déjà des données.",
+        "UDP n'a ni poignée de main ni fermeture.",
+        "Un serveur UDP peut recevoir un message de n'importe quel client sans l'avoir accepté avant."
+      ],
+      "falsehoods": [
+        "UDP commence par une poignée de main en deux temps.",
+        "UDP ferme proprement la connexion avec un message FIN.",
+        "Un client UDP doit d'abord être accepté par le serveur.",
+        "UDP garde en mémoire l'état de chaque conversation."
+      ],
+      "explanation": "UDP envoie sans préparation : pas de poignée de main, pas de fermeture, pas d'état de conversation."
+    },
+    {
+      "subject": "la fiabilité",
+      "truths": [
+        "UDP ne renvoie pas un datagramme perdu.",
+        "L'expéditeur ne sait pas si son datagramme est arrivé.",
+        "Un datagramme peut arriver en double.",
+        "Si une application veut de la fiabilité avec UDP, elle doit la construire elle-même."
+      ],
+      "falsehoods": [
+        "UDP renvoie automatiquement un datagramme perdu.",
+        "UDP envoie un accusé de réception pour chaque datagramme.",
+        "UDP prévient l'expéditeur quand un datagramme est perdu.",
+        "Un datagramme ne peut jamais arriver en double."
+      ],
+      "explanation": "UDP ne promet rien : ni accusé, ni renvoi, ni avertissement. La fiabilité, si elle est voulue, est l'affaire de l'application."
+    },
+    {
+      "subject": "l'ordre des datagrammes",
+      "truths": [
+        "Deux datagrammes peuvent arriver dans un ordre différent de celui d'envoi.",
+        "UDP ne remet pas les données dans l'ordre.",
+        "Chaque datagramme est indépendant des autres.",
+        "Une application qui a besoin de l'ordre doit numéroter ses messages elle-même."
+      ],
+      "falsehoods": [
+        "UDP garantit que les datagrammes arrivent dans l'ordre.",
+        "Les datagrammes forment un flux continu, comme avec TCP.",
+        "UDP numérote les octets pour remettre l'ordre.",
+        "Un datagramme dépend du précédent pour pouvoir être lu."
+      ],
+      "explanation": "Chaque datagramme voyage seul : rien ne les remet en ordre."
+    },
+    {
+      "subject": "les usages d'UDP",
+      "truths": [
+        "Le DNS utilise surtout UDP pour ses requêtes.",
+        "Les appels vidéo préfèrent UDP : une image en retard ne sert plus à rien.",
+        "Les jeux en ligne utilisent souvent UDP pour sa faible latence.",
+        "QUIC, sous HTTP/3, est construit sur UDP."
+      ],
+      "falsehoods": [
+        "Les virements bancaires passent par UDP, pour garantir la livraison.",
+        "SSH utilise UDP pour gagner en rapidité.",
+        "HTTP/1.1 est construit sur UDP.",
+        "Le courrier électronique utilise UDP pour ne perdre aucun message."
+      ],
+      "explanation": "UDP convient quand une donnée en retard est inutile : voix, vidéo, jeux, DNS. Ce qui doit absolument arriver passe par TCP."
+    },
+    {
+      "subject": "l'en-tête UDP",
+      "truths": [
+        "L'en-tête UDP est très court : 8 octets.",
+        "Il contient les ports d'origine et de destination.",
+        "Il contient la longueur et une somme de contrôle.",
+        "Il est plus léger que l'en-tête TCP."
+      ],
+      "falsehoods": [
+        "L'en-tête UDP contient un numéro de séquence.",
+        "L'en-tête UDP fait plus de 100 octets.",
+        "L'en-tête UDP contient une fenêtre de réception.",
+        "L'en-tête UDP contient l'adresse IP du destinataire."
+      ],
+      "explanation": "L'en-tête UDP ne contient que quatre champs : deux ports, la longueur et la somme de contrôle. L'adresse IP est dans l'en-tête IP."
+    },
+    {
+      "subject": "la somme de contrôle",
+      "truths": [
+        "Elle permet de détecter un datagramme abîmé en route.",
+        "Un datagramme dont la somme est fausse est jeté.",
+        "Elle ne permet pas de retrouver des données perdues.",
+        "Elle ne protège pas contre une modification volontaire."
+      ],
+      "falsehoods": [
+        "Elle permet de réparer des données abîmées.",
+        "Un datagramme dont la somme est fausse est quand même remis à l'application.",
+        "Elle chiffre le contenu du datagramme.",
+        "Elle garantit qu'aucun datagramme ne se perdra."
+      ],
+      "explanation": "La somme de contrôle détecte les erreurs, sans les réparer ni protéger contre un attaquant."
+    },
+    {
+      "subject": "la comparaison avec TCP",
+      "truths": [
+        "UDP n'attend aucune confirmation, ce qui réduit les délais.",
+        "UDP ajoute moins d'informations à chaque message que TCP.",
+        "UDP convient quand une donnée en retard devient inutile.",
+        "Avec UDP, c'est l'application qui décide de renvoyer ou non."
+      ],
+      "falsehoods": [
+        "UDP est toujours plus lent que TCP.",
+        "UDP vérifie que le destinataire est prêt avant d'envoyer.",
+        "UDP et TCP offrent exactement les mêmes garanties.",
+        "UDP ralentit son envoi quand le réseau est saturé."
+      ],
+      "explanation": "UDP est plus léger car il ne fait aucune vérification : pas de confirmation, pas d'ajustement à la saturation du réseau."
+    },
+    {
+      "subject": "les ports en UDP",
+      "truths": [
+        "UDP utilise des ports pour distinguer les programmes d'une machine.",
+        "Le port habituel du DNS est 53.",
+        "Les ports UDP et les ports TCP sont deux espaces de numéros séparés.",
+        "Un programme TCP et un programme UDP peuvent utiliser le même numéro de port."
+      ],
+      "falsehoods": [
+        "UDP n'utilise pas de ports.",
+        "Le port habituel du DNS est 80.",
+        "Un port TCP et un port UDP de même numéro désignent forcément le même programme.",
+        "Le port 53 est réservé au courrier électronique."
+      ],
+      "explanation": "UDP a ses propres ports, indépendants de ceux de TCP : le DNS est sur le 53."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "un échange en UDP",
+      "items": [
+        "Le client envoie le datagramme",
+        "Le datagramme traverse le réseau",
+        "Le serveur reçoit le datagramme",
+        "Le serveur répond par un nouveau datagramme"
+      ],
+      "explanation": "Chaque datagramme part seul, sans connexion préalable : la réponse est un second datagramme."
+    },
+    {
+      "subject": "ce qui arrive à un datagramme perdu",
+      "items": [
+        "Le client envoie le datagramme",
+        "Le datagramme se perd en route",
+        "Personne n'est prévenu",
+        "L'application décide de renvoyer ou d'abandonner"
+      ],
+      "explanation": "UDP ne remarque rien : seule l'application peut décider de renvoyer."
+    }
+  ]
+}

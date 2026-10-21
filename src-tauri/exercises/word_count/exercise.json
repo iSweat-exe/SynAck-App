@@ -1,0 +1,27 @@
+{
+  "id": "word_count",
+  "title": "Compter les mots",
+  "difficulty": "medium",
+  "summary": "Compte combien de fois chaque mot apparaît dans une phrase.",
+  "topics": [
+    "Dictionnaires",
+    "Chaînes"
+  ],
+  "statement": "Compte combien de fois **chaque mot** apparaît dans une phrase, avec un **dictionnaire** qui associe un mot à son nombre d'apparitions.",
+  "input": "Une phrase de 1 à 12 mots en minuscules, séparés par un espace.",
+  "output": "Une ligne par mot **différent**, au format `mot: nombre`, dans l'**ordre alphabétique** :\n\n```plaintext\npoire: 1\npomme: 2\n```",
+  "examples": [
+    {
+      "input": "pomme poire pomme\n",
+      "output": "poire: 1\npomme: 2"
+    },
+    {
+      "input": "kiwi\n",
+      "output": "kiwi: 1"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nmots = lines[0].split()\n\n# Compte les mots, puis affiche une ligne « mot: nombre » par mot,\n# dans l'ordre alphabétique.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst mots = lines[0].split(\" \");\n\n// Compte les mots, puis affiche une ligne « mot: nombre » par mot,\n// dans l'ordre alphabétique.\n"
+  }
+}

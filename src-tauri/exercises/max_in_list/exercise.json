@@ -1,0 +1,28 @@
+{
+  "id": "max_in_list",
+  "title": "Le plus grand nombre",
+  "difficulty": "easy",
+  "summary": "Trouve le plus grand nombre d'une liste, même quand ils sont tous négatifs.",
+  "topics": [
+    "Listes",
+    "Conditions"
+  ],
+  "statement": "Tu reçois une liste de nombres entiers. Trouve le **plus grand**.",
+  "input": "- ligne 1 : `k`, le nombre d'entiers (1 ≤ k ≤ 10) ;\n- ligne 2 : les `k` entiers, séparés par des espaces (ils peuvent être négatifs).",
+  "output": "Le plus grand des entiers.",
+  "notes": "Tous les nombres peuvent être négatifs : réfléchis à la valeur de départ de ta recherche.",
+  "examples": [
+    {
+      "input": "4\n3 12 -5 8\n",
+      "output": "12"
+    },
+    {
+      "input": "3\n-5 -2 -9\n",
+      "output": "-2"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nk = int(lines[0])\nnombres = lines[1]  # texte, ex. \"3 12 -5\"\n\n# Transforme ce texte en entiers, puis affiche le plus grand.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst k = Number(lines[0]);\nconst nombres = lines[1]; // texte, ex. \"3 12 -5\"\n\n// Transforme ce texte en nombres, puis affiche le plus grand.\n"
+  }
+}

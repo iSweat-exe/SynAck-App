@@ -1,0 +1,158 @@
+{
+  "topics": [
+    {
+      "subject": "le rôle de SSH",
+      "truths": [
+        "SSH permet de commander une machine distante en sécurité.",
+        "SSH a remplacé Telnet, qui envoyait les mots de passe en clair.",
+        "SSH permet aussi de copier des fichiers.",
+        "Le port habituel de SSH est 22."
+      ],
+      "falsehoods": [
+        "SSH sert à afficher des pages web.",
+        "Telnet est plus sûr que SSH.",
+        "SSH ne peut pas transférer de fichiers.",
+        "Le port habituel de SSH est 443."
+      ],
+      "explanation": "SSH ouvre un canal chiffré vers une machine distante, sur le port 22 : terminal, copie de fichiers, tunnels."
+    },
+    {
+      "subject": "la clé d'hôte",
+      "truths": [
+        "La clé d'hôte prouve l'identité du serveur.",
+        "Elle est mémorisée dans known_hosts après la première connexion.",
+        "Si elle change, SSH prévient le client.",
+        "Une alerte de changement de clé peut signaler une attaque de l'homme du milieu."
+      ],
+      "falsehoods": [
+        "La clé d'hôte prouve l'identité de l'utilisateur.",
+        "Elle est vérifiée par une autorité de certification.",
+        "Si elle change, SSH l'accepte en silence.",
+        "Elle doit rester secrète, même pour le client."
+      ],
+      "explanation": "La clé d'hôte identifie le serveur. SSH la retient et alerte si elle change : il n'y a pas d'autorité de certification."
+    },
+    {
+      "subject": "la première connexion à un serveur",
+      "truths": [
+        "SSH demande de confirmer l'empreinte de la clé du serveur.",
+        "Il faut comparer cette empreinte à une source fiable.",
+        "Après acceptation, le serveur est retenu dans known_hosts.",
+        "Accepter sans vérifier laisse la porte ouverte à un imposteur."
+      ],
+      "falsehoods": [
+        "SSH vérifie automatiquement le serveur grâce à une autorité de certification.",
+        "La première connexion ne demande aucune confirmation.",
+        "L'empreinte est inutile à vérifier.",
+        "Accepter l'empreinte envoie ton mot de passe au serveur."
+      ],
+      "explanation": "À la première connexion, c'est à toi de vérifier l'empreinte : SSH s'en souviendra ensuite."
+    },
+    {
+      "subject": "la paire de clés",
+      "truths": [
+        "La clé privée reste sur la machine de l'utilisateur.",
+        "La clé publique est placée sur le serveur, dans authorized_keys.",
+        "La clé privée ne voyage jamais sur le réseau.",
+        "Une signature prouve qu'on possède la clé privée."
+      ],
+      "falsehoods": [
+        "La clé privée est copiée sur le serveur.",
+        "La clé publique doit rester secrète.",
+        "La clé privée est envoyée à chaque connexion.",
+        "La clé publique permet de signer à la place de l'utilisateur."
+      ],
+      "explanation": "La clé privée reste chez toi et sert à signer ; la clé publique, sur le serveur, sert à vérifier."
+    },
+    {
+      "subject": "l'authentification par clé",
+      "truths": [
+        "Le client présente d'abord sa clé publique.",
+        "Le serveur regarde si cette clé figure dans authorized_keys.",
+        "Le client prouve qu'il possède la clé privée en signant des données de la session.",
+        "La signature ne peut pas être rejouée dans une autre session."
+      ],
+      "falsehoods": [
+        "Le client envoie sa clé privée au serveur pour qu'elle soit vérifiée.",
+        "Le serveur envoie sa propre clé privée au client.",
+        "La signature peut être réutilisée dans n'importe quelle session.",
+        "Aucune vérification n'a lieu côté serveur."
+      ],
+      "explanation": "Le client offre sa clé publique puis signe des données propres à la session : la clé privée ne part jamais et la signature n'est pas rejouable."
+    },
+    {
+      "subject": "l'échange de clés",
+      "truths": [
+        "Les deux côtés calculent le même secret sans l'envoyer.",
+        "Le serveur signe sa partie de l'échange avec sa clé d'hôte.",
+        "Après NEWKEYS, tout est chiffré.",
+        "L'authentification de l'utilisateur a lieu une fois le canal chiffré."
+      ],
+      "falsehoods": [
+        "Le secret est envoyé en clair, puis le canal est chiffré.",
+        "Le serveur n'a aucune clé à prouver.",
+        "Le mot de passe est envoyé avant le chiffrement.",
+        "L'échange de clés a lieu après la connexion de l'utilisateur."
+      ],
+      "explanation": "Le canal est chiffré avant que l'utilisateur ne s'authentifie : ni secret ni mot de passe ne circulent en clair."
+    },
+    {
+      "subject": "la négociation des algorithmes",
+      "truths": [
+        "Le client propose ses algorithmes et le serveur choisit ceux qu'ils ont en commun.",
+        "La négociation a lieu au début de la connexion.",
+        "On peut retirer un algorithme ancien du serveur pour renforcer la sécurité.",
+        "ed25519 est un type de clé SSH."
+      ],
+      "falsehoods": [
+        "Le serveur impose ses algorithmes sans les négocier.",
+        "Les algorithmes sont fixés pour toujours dans le protocole.",
+        "Aucun algorithme n'est négocié : SSH n'en utilise qu'un.",
+        "ed25519 est un mot de passe."
+      ],
+      "explanation": "SSH négocie ses algorithmes au début : cela permet de retirer les anciens quand ils deviennent faibles."
+    },
+    {
+      "subject": "les mots de passe SSH",
+      "truths": [
+        "Un mot de passe SSH passe dans le canal chiffré.",
+        "Une clé est en général préférable à un mot de passe.",
+        "Un mot de passe faible peut être deviné par des essais répétés.",
+        "On peut désactiver l'authentification par mot de passe sur un serveur."
+      ],
+      "falsehoods": [
+        "Un mot de passe SSH circule en clair.",
+        "Un mot de passe est toujours plus sûr qu'une clé.",
+        "Un mot de passe ne peut pas être deviné par des essais répétés.",
+        "Un serveur SSH doit obligatoirement accepter les mots de passe."
+      ],
+      "explanation": "Le mot de passe est chiffré, mais devinable : une clé est préférable et le mot de passe peut être désactivé."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "l'ouverture d'une session SSH",
+      "items": [
+        "Les deux côtés annoncent leur version",
+        "Le client propose ses algorithmes",
+        "Le serveur envoie sa clé d'hôte",
+        "Le client vérifie la clé d'hôte",
+        "Le canal passe en chiffré (NEWKEYS)",
+        "Le client s'authentifie",
+        "La session s'ouvre"
+      ],
+      "explanation": "Le serveur est identifié et le canal chiffré avant que l'utilisateur ne s'authentifie."
+    },
+    {
+      "subject": "l'authentification par clé",
+      "items": [
+        "Le client offre sa clé publique",
+        "Le serveur reconnaît la clé",
+        "Le client signe des données de la session",
+        "Le serveur vérifie la signature",
+        "L'accès est accordé"
+      ],
+      "explanation": "La clé publique est reconnue, puis la signature prouve la possession de la clé privée."
+    }
+  ]
+}

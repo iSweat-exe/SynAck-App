@@ -1,0 +1,157 @@
+name: Database
+
+# The Supabase project is shared with the old web version. Its migrations now live in
+# supabase/migrations of this repository.
+#
+# - On a pull request that touches supabase/: the rules of migrations are checked, then every
+#   migration is replayed on a throwaway local database and the database tests run.
+# - On a merge into main that adds migrations: they are applied to the production project
+#   automatically (a dry run first, then the push, then a check that nothing is left pending).
+# - By hand: a dry run by default.
+#
+# Needs two secrets and one variable (docs/RELEASING.md): SUPABASE_ACCESS_TOKEN,
+# SUPABASE_DB_PASSWORD and the variable SUPABASE_PROJECT_REF.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - supabase/**
+      - .github/workflows/database.yml
+  push:
+    branches: [main]
+    paths:
+      - supabase/migrations/**
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run only (supabase db push --dry-run)"
+        type: boolean
+        default: true
+
+# Never cancel a migration in flight; queue the next one.
+concurrency:
+  group: database-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_CLI_VERSION: "2.121.0"
+
+jobs:
+  test:
+    name: Test the migrations
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Migration rules
+        run: |
+          set -euo pipefail
+
+          # Applied migrations are immutable: only additions are allowed.
+          changed=$(git diff --name-only --diff-filter=MDR "$BASE_SHA" HEAD -- 'supabase/migrations/*.sql' || true)
+          if [ -n "$changed" ]; then
+            echo "::error::Existing migrations must never be edited, renamed or deleted. Add a new migration instead:"
+            echo "$changed"
+            exit 1
+          fi
+
+          added=$(git diff --name-only --diff-filter=A "$BASE_SHA" HEAD -- 'supabase/migrations/*.sql' || true)
+          if [ -z "$added" ]; then
+            echo "No new migration in this PR."
+            exit 0
+          fi
+
+          # New migrations must sort after the latest one on main, or `db push` refuses them.
+          last_base=$(git ls-tree --name-only "$BASE_SHA" supabase/migrations/ | xargs -n1 basename | grep -E '^[0-9]+_' | sort | tail -n 1 | cut -d_ -f1 || true)
+          for f in $added; do
+            version=$(basename "$f" | cut -d_ -f1)
+            if [ -n "$last_base" ] && [ "$version" -le "$last_base" ]; then
+              echo "::error::$f is older than the latest migration on main ($last_base). Rebase and rename it with a newer timestamp."
+              exit 1
+            fi
+          done
+
+          # Destructive statements need the `breaking-change` label.
+          hits=$(python3 .github/scripts/find-destructive-sql.py $added)
+          if [ -n "$hits" ]; then
+            echo "Destructive statements found:"
+            echo "$hits"
+            if echo "$PR_LABELS" | grep -q '"breaking-change"'; then
+              echo "::warning::Destructive migration allowed by the breaking-change label."
+            else
+              echo "::error::Add the breaking-change label to this PR to acknowledge the destructive migration."
+              exit 1
+            fi
+          fi
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Replay every migration on a local database, then run the database tests
+        run: |
+          set -euo pipefail
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+          supabase test db
+
+      - name: Stop the local database
+        if: always()
+        run: supabase stop --no-backup || true
+
+  migrate:
+    name: Apply the migrations to production
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the configuration
+        env:
+          PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: |
+          test -d supabase/migrations || { echo "::error::supabase/migrations not found"; exit 1; }
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD PROJECT_REF; do
+            if [ -z "${!v}" ]; then echo "::error::$v is not set (docs/RELEASING.md)"; exit 1; fi
+          done
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link the production project
+        run: supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+
+      - name: Pending migrations
+        run: supabase migration list --linked
+
+      - name: Dry run
+        run: supabase db push --dry-run
+
+      - name: Apply the migrations
+        if: github.event_name == 'push' || !inputs.dry_run
+        run: supabase db push
+
+      - name: Verify that nothing is pending
+        if: github.event_name == 'push' || !inputs.dry_run
+        run: |
+          supabase migration list --linked
+          if supabase db push --dry-run | grep -qi "would push"; then
+            echo "::error::Migrations are still pending after the push."
+            exit 1
+          fi

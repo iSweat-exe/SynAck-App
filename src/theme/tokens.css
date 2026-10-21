@@ -1,0 +1,146 @@
+/* Design tokens. Source of truth: docs/design/DESIGN.md (palette, shape, light/dark roles). */
+
+:root {
+  /* Primary (pink). 400 is the brand color. */
+  --primary-950: #2b0519;
+  --primary-900: #470a2b;
+  --primary-800: #770d46;
+  --primary-700: #a71161;
+  --primary-600: #d11a7b;
+  --primary-500: #f656ab;
+  --primary-400: #fb84c3;
+  --primary-300: #fda3d2;
+  --primary-200: #fec2e1;
+  --primary-100: #ffe0f0;
+  --primary-50: #fff0f8;
+
+  /* Neutral */
+  --neutral-950: #121011;
+  --neutral-900: #1e1b1d;
+  --neutral-800: #2e292c;
+  --neutral-700: #453e42;
+  --neutral-600: #5f565b;
+  --neutral-500: #7f757b;
+  --neutral-400: #a9a0a5;
+  --neutral-300: #d1cace;
+  --neutral-200: #e6e1e4;
+  --neutral-100: #f3f0f2;
+  --neutral-50: #faf8f9;
+  --neutral-0: #ffffff;
+
+  /* Semantic: 100 = message background, 500 = accent, 900 = text on 100 */
+  --success-100: #dcf7e8;
+  --success-500: #1fa463;
+  --success-900: #0f6b3f;
+  --warning-100: #fff1cc;
+  --warning-500: #f5a524;
+  --warning-900: #8a5a00;
+  --danger-100: #ffe0e0;
+  --danger-500: #e5484d;
+  --danger-900: #a4202a;
+  --info-100: #ddebff;
+  --info-500: #3b82f6;
+  --info-900: #1e4fb0;
+
+  /* Shape. `--u` is the outline width; everything else is a multiple of it. */
+  --u: 2px;
+  --radius: calc(2 * var(--u));
+  --radius-lg: calc(4 * var(--u));
+  --shadow: #000000;
+  --shadow-offset: calc(1.5 * var(--u));
+  --shadow-offset-lg: calc(2 * var(--u));
+  --bevel: calc(1 * var(--u));
+
+  /* Text on a colored fill is always near-black, in both modes. */
+  --on-primary: var(--neutral-950);
+
+  /* Keyboard focus ring: the ink color, so it keeps its contrast in both themes. */
+  --focus-ring: var(--ink);
+
+  --font: "Space Mono", ui-monospace, "Cascadia Code", Menlo, monospace;
+}
+
+/* Roles: components use these, never the raw tones. */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: var(--neutral-100);
+  --surface: var(--neutral-0);
+  --surface-raised: var(--neutral-50);
+  --ink: var(--neutral-950);
+  --muted: var(--neutral-600);
+  --outline: var(--neutral-950);
+  --secondary-bg: var(--primary-50);
+  --secondary-bevel: var(--neutral-300);
+  --disabled-bg: var(--neutral-200);
+  --disabled-bevel: var(--neutral-300);
+  --disabled-ink: var(--neutral-500);
+  --selection: var(--primary-200);
+  --brand: var(--primary-400);
+  --brand-bevel: var(--primary-500);
+  --knob-off: var(--neutral-400);
+  --success-accent: var(--success-500);
+  --warning-accent: var(--warning-500);
+  --danger-accent: var(--danger-500);
+  /* Code and output sit in an inset: darker than the card they are in, with a thin hairline. */
+  --inset: var(--neutral-100);
+  --hairline: var(--neutral-300);
+  /* Callout ("À savoir"): a warm note in light mode, a calm surface with a warm edge in dark mode. */
+  --callout-bg: var(--warning-100);
+  --callout-fg: var(--warning-900);
+  --callout-edge: var(--outline);
+  --callout-label: var(--warning-900);
+
+  --success-bg: var(--success-100);
+  --success-fg: var(--success-900);
+  --warning-bg: var(--warning-100);
+  --warning-fg: var(--warning-900);
+  --danger-bg: var(--danger-100);
+  --danger-fg: var(--danger-900);
+}
+
+/*
+ * The dark theme is a dusk, not a night: warm plum greys (the hue of the brand pink), a softened
+ * pink, muted semantic tones, and moderate contrasts (text about 10:1 instead of the 16:1 of
+ * white on black, which glares). A hard shadow is DARKER than the page, since black would not
+ * show. `design-tokens.test.ts` checks the contrasts: change a value, run the tests.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #2b2733;
+  --surface: #353040;
+  --surface-raised: #3f3949;
+  --inset: #262230;
+  --ink: #e7e1ec;
+  --muted: #b0a6bb;
+  --outline: #b5abc1;
+  --hairline: #4e4759;
+  --shadow: #19161e;
+  --selection: #5e3f58;
+  --knob-off: #7d7489;
+
+  --brand: #e48bb9;
+  --brand-bevel: #c26c9a;
+  --secondary-bg: #453f52;
+  --secondary-bevel: #39344a;
+  --disabled-bg: #3b3646;
+  --disabled-bevel: #312d3b;
+  --disabled-ink: #8a8195;
+
+  /* Semantic tones: muted backgrounds with soft text, not the saturated tones of light mode. */
+  --success-bg: #2f4b3f;
+  --success-fg: #c2e8d3;
+  --success-accent: #6cc49a;
+  --warning-bg: #4f4430;
+  --warning-fg: #f2dda6;
+  --warning-accent: #e3b75f;
+  --danger-bg: #58343f;
+  --danger-fg: #f8cbd1;
+  --danger-accent: #e4808a;
+
+  --callout-bg: var(--surface-raised);
+  --callout-fg: var(--ink);
+  --callout-edge: var(--warning-accent);
+  --callout-label: var(--warning-accent);
+}

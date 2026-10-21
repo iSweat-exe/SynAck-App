@@ -1,0 +1,27 @@
+{
+  "id": "dict_sum",
+  "title": "Additionner les valeurs d'un dictionnaire",
+  "difficulty": "easy",
+  "summary": "Construis un dictionnaire à partir de lignes « clé valeur » et additionne ses valeurs.",
+  "topics": [
+    "Dictionnaires"
+  ],
+  "statement": "Tu reçois des paires **clé / valeur**. Construis un **dictionnaire** (un objet en JavaScript) avec ces paires, puis additionne ses valeurs.",
+  "input": "- ligne 1 : `k`, le nombre de lignes qui suivent (1 ≤ k ≤ 12) ;\n- puis `k` lignes : une clé (un mot sans espace) et un entier, éventuellement négatif, séparés par un espace.",
+  "output": "La **somme des valeurs** du dictionnaire.",
+  "notes": "Si une même clé apparaît plusieurs fois, **seule la dernière valeur compte** : dans un dictionnaire, une clé n'existe qu'une seule fois.",
+  "examples": [
+    {
+      "input": "3\npomme 4\npoire 6\nkiwi -2\n",
+      "output": "8"
+    },
+    {
+      "input": "3\na 1\nb 2\na 10\n",
+      "output": "12"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nk = int(lines[0])\n\n# Construis le dictionnaire avec les k lignes suivantes,\n# puis affiche la somme de ses valeurs.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst k = Number(lines[0]);\n\n// Construis l'objet avec les k lignes suivantes,\n// puis affiche la somme de ses valeurs.\n"
+  }
+}

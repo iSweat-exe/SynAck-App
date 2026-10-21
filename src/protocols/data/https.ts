@@ -1,0 +1,85 @@
+import { httpsLessons } from "../lessons/https";
+import type { Protocol } from "../types";
+
+export const https: Protocol = {
+  id: "https",
+  name: "HTTPS",
+  fullName: "HTTP Secure",
+  tagline: "HTTP, mais dans un tunnel TLS.",
+  difficulty: "medium",
+  topics: ["Web", "Sécurité"],
+  prerequisites: ["tcp", "dns", "http", "tls"],
+  notions: [],
+  purpose: [
+    "HTTPS n'est pas un nouveau protocole : c'est HTTP, inchangé, transporté à l'intérieur d'une connexion TLS. Les requêtes et les réponses sont exactement les mêmes. La seule différence, c'est que personne entre toi et le serveur ne peut les lire ou les modifier.",
+    "Le cadenas du navigateur veut dire que le certificat est valide pour ce nom de domaine et que la connexion est chiffrée. Il ne dit pas que le site est honnête : un site d'hameçonnage peut très bien avoir un certificat pour son propre domaine.",
+  ],
+  takeaways: [
+    "HTTPS = HTTP + TLS. Même requête, même réponse, mais chiffrées.",
+    "Un espion voit encore à quel serveur tu parles et la taille des échanges, mais pas leur contenu ni l'adresse complète.",
+    "Le cadenas garantit le chiffrement et le bon domaine, pas la bonne foi du site.",
+    "Port 443 : le navigateur ouvre TCP, puis TLS, puis envoie la requête HTTP.",
+  ],
+  facts: [
+    { label: "Couche", value: "Application (7) sur TLS" },
+    { label: "Port", value: "443" },
+    { label: "Ordre", value: "TCP, puis TLS, puis HTTP" },
+    { label: "Certificat", value: "Obligatoire côté serveur" },
+  ],
+  lessons: httpsLessons,
+  actors: [
+    { id: "browser", name: "Navigateur", role: "le client" },
+    { id: "spy", name: "Espion", role: "Wi-Fi public, routeur" },
+    { id: "server", name: "Serveur", role: "port 443" },
+  ],
+  steps: [
+    {
+      from: "browser",
+      to: "browser",
+      label: "https://example.com",
+      note: "Le schéma https:// indique le port 443 et l'usage de TLS. Le navigateur a déjà obtenu l'adresse du serveur grâce au DNS.",
+    },
+    {
+      from: "browser",
+      to: "server",
+      label: "Connexion TCP",
+      note: "Le navigateur ouvre d'abord une connexion TCP vers le port 443. L'espion voit passer cette ouverture.",
+      detail: "SYN → SYN-ACK → ACK",
+      states: { browser: "TCP", server: "TCP" },
+    },
+    {
+      from: "browser",
+      to: "server",
+      label: "Poignée de main TLS",
+      note: "Ensuite, TLS s'installe : accord sur un secret, et vérification du certificat. L'espion voit passer le nom du site (SNI), mais plus rien de ce qui suit.",
+      detail: "ClientHello → ServerHello → Certificat → Finished",
+      tone: "brand",
+      states: { browser: "TLS", server: "TLS" },
+    },
+    {
+      from: "browser",
+      to: "server",
+      label: "GET /compte (chiffré)",
+      note: "La requête HTTP part, mais enveloppée dans TLS. Elle contient l'adresse complète, les cookies et les mots de passe éventuels.",
+      detail: "17 03 03 00 5a 8f 2e c1 94 0b a7 3d …",
+      tone: "success",
+    },
+    {
+      from: "spy",
+      to: "spy",
+      label: "Ne voit que du bruit",
+      note: "L'espion capte bien tous les paquets, mais son contenu est illisible. Il connaît seulement l'adresse du serveur, le moment et la taille des échanges. En HTTP simple, il aurait lu la requête en entier.",
+      detail: "17 03 03 00 5a 8f 2e c1 94 0b a7 3d …",
+      tone: "warning",
+    },
+    {
+      from: "server",
+      to: "browser",
+      label: "200 OK (chiffré)",
+      note: "Le serveur déchiffre la requête, la traite comme n'importe quelle requête HTTP, et répond de la même façon : chiffré.",
+      detail: "17 03 03 04 e8 31 b9 6c 02 7f …",
+      tone: "success",
+    },
+  ],
+  related: ["tls", "http", "dns"],
+};

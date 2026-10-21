@@ -1,0 +1,182 @@
+{
+  "topics": [
+    {
+      "subject": "la poignée de main en trois temps",
+      "truths": [
+        "Elle se compose de trois messages : SYN, SYN-ACK puis ACK.",
+        "Le client envoie le premier message, le SYN.",
+        "À la fin, les deux côtés sont à l'état ESTABLISHED.",
+        "Chaque côté y annonce le numéro de séquence par lequel il commence."
+      ],
+      "falsehoods": [
+        "Elle se compose de deux messages : une demande puis une réponse.",
+        "Le serveur envoie le premier message, pour proposer la connexion.",
+        "Elle chiffre la connexion avant que les données soient échangées.",
+        "Le numéro de séquence de départ est toujours 0 et n'est jamais annoncé."
+      ],
+      "explanation": "La poignée de main compte trois messages (SYN, SYN-ACK, ACK). Le client commence, chaque côté annonce son numéro de départ, et TCP ne chiffre rien."
+    },
+    {
+      "subject": "les accusés de réception",
+      "truths": [
+        "Un ACK indique jusqu'où la réception s'est bien passée.",
+        "Sans accusé de réception, l'expéditeur finit par renvoyer les données.",
+        "Le numéro d'acquittement désigne le prochain octet attendu.",
+        "Un seul accusé peut confirmer plusieurs segments reçus."
+      ],
+      "falsehoods": [
+        "Un ACK demande à l'expéditeur de renvoyer le dernier segment.",
+        "Un segment qui n'est pas acquitté n'est jamais renvoyé.",
+        "Le numéro d'acquittement est celui du dernier octet reçu, et non du suivant.",
+        "Un accusé n'est envoyé que lorsqu'une erreur a été détectée."
+      ],
+      "explanation": "L'ACK confirme ce qui est arrivé et désigne le prochain octet attendu. Sans lui, l'expéditeur renvoie."
+    },
+    {
+      "subject": "la perte d'un paquet",
+      "truths": [
+        "Un segment qui n'est pas acquitté à temps est renvoyé.",
+        "Le délai avant renvoi augmente après chaque échec successif.",
+        "L'application reçoit les octets dans l'ordre, sans trou.",
+        "TCP corrige la perte sans que l'application ait à s'en occuper."
+      ],
+      "falsehoods": [
+        "Un segment perdu est abandonné : TCP se contente de prévenir l'application.",
+        "Le délai avant renvoi diminue à chaque échec.",
+        "C'est à l'application de détecter la perte et de renvoyer les données.",
+        "Un segment perdu oblige à recommencer toute la poignée de main."
+      ],
+      "explanation": "TCP détecte l'absence d'accusé, attend un délai qui s'allonge à chaque échec, puis renvoie : l'application ne voit rien."
+    },
+    {
+      "subject": "la fermeture d'une connexion",
+      "truths": [
+        "Elle utilise des messages FIN, chacun acquitté par un ACK.",
+        "Chaque sens de la connexion peut être fermé séparément.",
+        "L'état TIME_WAIT laisse le temps de retransmettre le dernier ACK si besoin.",
+        "Elle comporte en général quatre messages.",
+        "Le côté qui ferme en premier finit à l'état TIME_WAIT."
+      ],
+      "falsehoods": [
+        "Une fermeture propre se fait en un seul message, le RST, des deux côtés.",
+        "Fermer un sens ferme obligatoirement l'autre au même moment.",
+        "L'état TIME_WAIT sert à chiffrer les derniers messages.",
+        "Dès que le serveur a reçu le FIN du client, il ne peut plus rien envoyer."
+      ],
+      "explanation": "Chaque sens se ferme avec son FIN et son ACK, donc quatre messages : le serveur peut encore parler après le FIN du client, et celui qui ferme en premier attend en TIME_WAIT."
+    },
+    {
+      "subject": "les numéros de séquence",
+      "truths": [
+        "Ils numérotent les octets et non les paquets.",
+        "Ils permettent au destinataire de remettre les données dans l'ordre.",
+        "Ils permettent de repérer un segment reçu en double.",
+        "Chaque sens de la connexion a sa propre numérotation."
+      ],
+      "falsehoods": [
+        "Ils numérotent les paquets, avec un numéro par paquet.",
+        "Les deux sens de la connexion partagent une même numérotation.",
+        "Ils servent uniquement à chiffrer les données.",
+        "Ils recommencent à 1 à chaque segment envoyé."
+      ],
+      "explanation": "TCP numérote chaque octet, dans chaque sens : c'est ce qui permet de remettre en ordre et d'écarter les doublons."
+    },
+    {
+      "subject": "ce que TCP garantit",
+      "truths": [
+        "Les données arrivent dans l'ordre où elles ont été envoyées.",
+        "Les données perdues sont renvoyées.",
+        "L'application ne reçoit aucun octet en double.",
+        "Il garantit une livraison fiable, pas une livraison rapide."
+      ],
+      "falsehoods": [
+        "Les données arrivent toujours en moins d'une seconde.",
+        "Les données sont chiffrées, personne ne peut les lire.",
+        "L'ordre d'arrivée dépend de la vitesse de chaque paquet.",
+        "Aucun paquet ne se perd jamais dans le réseau."
+      ],
+      "explanation": "TCP répare les pertes et remet les données en ordre, mais il ne promet ni rapidité ni chiffrement, et les paquets continuent de se perdre : c'est lui qui les renvoie."
+    },
+    {
+      "subject": "les états d'une connexion",
+      "truths": [
+        "Un serveur qui attend des clients est à l'état LISTEN.",
+        "Après l'envoi du SYN, le client est à l'état SYN_SENT.",
+        "ESTABLISHED veut dire que la connexion est ouverte des deux côtés.",
+        "CLOSED indique qu'il n'y a plus de connexion."
+      ],
+      "falsehoods": [
+        "Un serveur qui attend des clients est à l'état ESTABLISHED.",
+        "Le client est à l'état LISTEN après avoir envoyé le SYN.",
+        "SYN_RECEIVED est l'état du client après son premier message.",
+        "ESTABLISHED apparaît avant l'envoi du premier SYN."
+      ],
+      "explanation": "Le serveur attend en LISTEN, le client passe en SYN_SENT, le serveur en SYN_RECEIVED, puis les deux sont ESTABLISHED."
+    },
+    {
+      "subject": "les ports",
+      "truths": [
+        "Un port identifie un programme sur une machine.",
+        "Une connexion est identifiée par les adresses IP et les ports des deux côtés.",
+        "Le client reçoit en général un port éphémère choisi par son système.",
+        "Plusieurs connexions peuvent arriver sur le même port du serveur."
+      ],
+      "falsehoods": [
+        "Un port identifie une machine sur le réseau.",
+        "Un port ne peut servir qu'à une seule connexion à la fois.",
+        "Le port du client est toujours le même que celui du serveur.",
+        "Les ports n'existent que pour UDP."
+      ],
+      "explanation": "L'adresse IP désigne la machine, le port désigne le programme : une connexion est définie par les deux couples, ce qui permet à un serveur de recevoir beaucoup de clients sur un même port."
+    },
+    {
+      "subject": "le contrôle de flux",
+      "truths": [
+        "La fenêtre annoncée par le destinataire limite ce que l'expéditeur peut envoyer sans accusé.",
+        "Un destinataire débordé peut annoncer une fenêtre plus petite.",
+        "Le contrôle de flux protège le destinataire.",
+        "La fenêtre se mesure en octets."
+      ],
+      "falsehoods": [
+        "La fenêtre est fixée par l'expéditeur sans tenir compte du destinataire.",
+        "Une fenêtre à zéro ferme définitivement la connexion.",
+        "Le contrôle de flux protège les routeurs du réseau.",
+        "La fenêtre se mesure en nombre de paquets."
+      ],
+      "explanation": "Le destinataire annonce combien d'octets il peut encore recevoir : c'est la fenêtre. Elle le protège, tandis que le contrôle de congestion protège le réseau."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "l'ouverture d'une connexion TCP",
+      "items": [
+        "SYN du client",
+        "SYN-ACK du serveur",
+        "ACK du client",
+        "Premières données"
+      ],
+      "explanation": "Le client demande (SYN), le serveur accepte (SYN-ACK), le client confirme (ACK), et seulement alors les données passent."
+    },
+    {
+      "subject": "la fermeture d'une connexion TCP",
+      "items": [
+        "FIN du client",
+        "ACK du serveur",
+        "FIN du serveur",
+        "ACK du client"
+      ],
+      "explanation": "Chaque sens se ferme avec son FIN, acquitté par un ACK ; le client termine en TIME_WAIT."
+    },
+    {
+      "subject": "la perte d'un segment de données",
+      "items": [
+        "Le client envoie les données",
+        "Les données se perdent",
+        "Le délai de retransmission expire",
+        "Le client renvoie les données",
+        "Le serveur envoie son ACK"
+      ],
+      "explanation": "Sans accusé avant la fin du délai, le client renvoie les mêmes octets ; le serveur ne voit jamais le trou."
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "topics": [
+    {
+      "subject": "une requête HTTP",
+      "truths": [
+        "Une requête contient une méthode, une adresse et des en-têtes.",
+        "L'en-tête Host indique le nom du site visé.",
+        "La méthode GET sert à lire une ressource.",
+        "En HTTP/1.1, une requête est du texte lisible."
+      ],
+      "falsehoods": [
+        "Une requête ne contient jamais d'en-têtes.",
+        "L'en-tête Host indique le navigateur utilisé.",
+        "La méthode GET sert à supprimer une ressource.",
+        "Une requête HTTP est toujours chiffrée."
+      ],
+      "explanation": "Une requête HTTP/1.1 est un texte : méthode, adresse, en-têtes. Host nomme le site visé."
+    },
+    {
+      "subject": "les méthodes HTTP",
+      "truths": [
+        "GET lit une ressource sans la modifier.",
+        "POST envoie des données au serveur, par exemple un formulaire.",
+        "DELETE demande la suppression d'une ressource.",
+        "PUT remplace une ressource."
+      ],
+      "falsehoods": [
+        "GET sert à envoyer un formulaire de connexion de façon sécurisée.",
+        "DELETE demande la lecture d'une ressource.",
+        "POST ne peut jamais contenir de données.",
+        "PUT supprime une ressource."
+      ],
+      "explanation": "GET lit, POST envoie, PUT remplace, DELETE supprime."
+    },
+    {
+      "subject": "les codes de statut",
+      "truths": [
+        "Un code 2xx signale un succès.",
+        "Un code 404 signifie que la ressource n'a pas été trouvée.",
+        "Un code 5xx signale une erreur du côté du serveur.",
+        "Un code 3xx indique une redirection."
+      ],
+      "falsehoods": [
+        "Un code 2xx signale une erreur du client.",
+        "Un code 404 signifie que le serveur est en panne.",
+        "Un code 5xx signale une erreur du côté du client.",
+        "Un code 3xx indique que tout s'est bien passé, sans autre action."
+      ],
+      "explanation": "2xx : succès. 3xx : redirection. 4xx : erreur du client (404 = pas trouvé). 5xx : erreur du serveur."
+    },
+    {
+      "subject": "une réponse HTTP",
+      "truths": [
+        "Une réponse commence par un code de statut.",
+        "L'en-tête Content-Type indique le type du contenu renvoyé.",
+        "L'en-tête Content-Length indique la taille du contenu en octets.",
+        "Le contenu vient après les en-têtes, séparé par une ligne vide."
+      ],
+      "falsehoods": [
+        "Une réponse commence par le contenu, suivi du code.",
+        "L'en-tête Content-Type indique la taille du contenu.",
+        "L'en-tête Content-Length indique le type du contenu.",
+        "Les en-têtes viennent après le contenu."
+      ],
+      "explanation": "Une réponse enchaîne : ligne de statut, en-têtes, ligne vide, contenu."
+    },
+    {
+      "subject": "l'absence de mémoire de HTTP",
+      "truths": [
+        "Chaque requête est indépendante des précédentes.",
+        "Le serveur ne se souvient pas de toi sans cookie ni jeton.",
+        "Un cookie est renvoyé par le navigateur à chaque requête vers le même site.",
+        "Les cookies servent à garder une session ouverte."
+      ],
+      "falsehoods": [
+        "Le serveur garde automatiquement la liste de toutes tes requêtes.",
+        "HTTP intègre un mécanisme de connexion avec mot de passe.",
+        "Un cookie n'est jamais renvoyé au serveur.",
+        "HTTP retient qui tu es entre deux requêtes sans rien d'autre."
+      ],
+      "explanation": "HTTP oublie tout entre deux requêtes : les cookies et les jetons, ajoutés par-dessus, permettent de te reconnaître."
+    },
+    {
+      "subject": "le client et le serveur",
+      "truths": [
+        "Le client commence l'échange, le serveur répond.",
+        "Un serveur HTTP écoute par défaut sur le port 80.",
+        "Le serveur répond à la demande du client.",
+        "Un même serveur peut héberger plusieurs sites, grâce à l'en-tête Host."
+      ],
+      "falsehoods": [
+        "Le serveur commence l'échange en envoyant la page.",
+        "Un serveur HTTP écoute par défaut sur le port 22.",
+        "Le client répond aux requêtes du serveur.",
+        "Un serveur ne peut héberger qu'un seul site."
+      ],
+      "explanation": "Le client demande, le serveur répond. Le port habituel est le 80, et Host permet d'héberger plusieurs sites."
+    },
+    {
+      "subject": "HTTP en clair",
+      "truths": [
+        "Les échanges HTTP circulent en clair sur le réseau.",
+        "Un intermédiaire peut lire une requête HTTP simple.",
+        "Un intermédiaire peut modifier une réponse HTTP simple.",
+        "HTTPS corrige ces faiblesses."
+      ],
+      "falsehoods": [
+        "HTTP chiffre les échanges par défaut.",
+        "Seul le destinataire peut lire une requête HTTP.",
+        "Un intermédiaire ne peut que lire une réponse HTTP, jamais la modifier.",
+        "HTTPS rend les requêtes plus faciles à lire pour un intermédiaire."
+      ],
+      "explanation": "HTTP simple est lisible et modifiable par tout intermédiaire. HTTPS ajoute TLS pour l'empêcher."
+    },
+    {
+      "subject": "les versions de HTTP",
+      "truths": [
+        "HTTP/1.1 est un protocole en texte lisible.",
+        "HTTP/2 est un protocole binaire.",
+        "HTTP/3 s'appuie sur QUIC, lui-même construit sur UDP.",
+        "HTTP/1.1 s'appuie sur TCP."
+      ],
+      "falsehoods": [
+        "HTTP/2 est un protocole en texte lisible.",
+        "HTTP/3 s'appuie sur TCP comme HTTP/1.1.",
+        "HTTP/1.1 s'appuie sur UDP.",
+        "Il n'existe qu'une seule version de HTTP."
+      ],
+      "explanation": "HTTP/1.1 est en texte sur TCP, HTTP/2 est binaire, HTTP/3 passe par QUIC sur UDP."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "une requête HTTP, de l'envoi à l'affichage",
+      "items": [
+        "Le navigateur envoie la requête GET",
+        "Le serveur cherche la ressource",
+        "Le serveur envoie la réponse 200",
+        "Le navigateur affiche la page"
+      ],
+      "explanation": "Le client demande, le serveur cherche puis répond, et le navigateur affiche ce qu'il reçoit."
+    },
+    {
+      "subject": "les parties d'une réponse HTTP",
+      "items": [
+        "La ligne de statut",
+        "Les en-têtes",
+        "Une ligne vide",
+        "Le contenu"
+      ],
+      "explanation": "Une réponse est faite dans cet ordre : statut, en-têtes, ligne vide, contenu."
+    }
+  ]
+}

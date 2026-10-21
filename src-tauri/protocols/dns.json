@@ -1,0 +1,154 @@
+{
+  "topics": [
+    {
+      "subject": "le rôle du DNS",
+      "truths": [
+        "Le DNS traduit un nom de domaine en adresse IP.",
+        "Il fonctionne comme un annuaire : on donne un nom, il rend une adresse.",
+        "On l'interroge avant d'ouvrir la connexion vers un site.",
+        "Un même nom peut correspondre à plusieurs adresses."
+      ],
+      "falsehoods": [
+        "Le DNS chiffre les échanges avec un site.",
+        "Le DNS stocke les pages des sites web.",
+        "Le DNS traduit une adresse IP en mot de passe.",
+        "Un nom de domaine correspond toujours à exactement une adresse."
+      ],
+      "explanation": "Le DNS est l'annuaire d'Internet : il associe un nom à une ou plusieurs adresses IP. Il ne stocke aucun site et ne chiffre rien."
+    },
+    {
+      "subject": "le résolveur",
+      "truths": [
+        "Le résolveur mène l'enquête à la place du navigateur.",
+        "Il garde les réponses en cache.",
+        "Il est souvent fourni par le fournisseur d'accès, ou choisi comme 1.1.1.1.",
+        "Il interroge d'autres serveurs quand il n'a pas la réponse."
+      ],
+      "falsehoods": [
+        "Le résolveur détient toutes les adresses du monde.",
+        "Le navigateur interroge directement les serveurs racine.",
+        "Le résolveur ne retient jamais les réponses.",
+        "Chaque site web a son propre résolveur."
+      ],
+      "explanation": "Le résolveur fait le travail à la place du navigateur : il consulte son cache puis descend la hiérarchie."
+    },
+    {
+      "subject": "les serveurs racine",
+      "truths": [
+        "Ils sont tout en haut de la hiérarchie du DNS.",
+        "Ils ne connaissent pas l'adresse d'un site, mais savent qui gère chaque extension.",
+        "Le résolveur les interroge quand sa mémoire ne suffit pas.",
+        "Ils renvoient vers les serveurs du TLD."
+      ],
+      "falsehoods": [
+        "Ils connaissent l'adresse de tous les sites du monde.",
+        "Ils sont interrogés pour chaque page chargée.",
+        "Ils sont interrogés en dernier.",
+        "Ils appartiennent à l'entreprise du site visité."
+      ],
+      "explanation": "La racine ne connaît que les extensions (.com, .fr...) : elle renvoie vers le bon serveur de TLD."
+    },
+    {
+      "subject": "les serveurs de TLD",
+      "truths": [
+        "Un serveur de TLD gère une extension comme .com ou .fr.",
+        "Il indique quels serveurs font autorité pour un domaine précis.",
+        "Il est interrogé après la racine et avant le serveur faisant autorité.",
+        "Il ne détient pas l'adresse finale du site."
+      ],
+      "falsehoods": [
+        "Un serveur de TLD détient l'adresse finale de tous les sites .com.",
+        "Il est interrogé avant les serveurs racine.",
+        "Il est interrogé après le serveur faisant autorité.",
+        "Un serveur de TLD ne gère qu'un seul site web."
+      ],
+      "explanation": "Le TLD est le deuxième étage : il désigne le serveur qui fait autorité pour le domaine."
+    },
+    {
+      "subject": "le serveur faisant autorité",
+      "truths": [
+        "Il détient la vraie réponse pour un domaine.",
+        "Il est géré par le propriétaire du domaine ou son hébergeur DNS.",
+        "Sa réponse est valable pendant une durée, le TTL.",
+        "C'est le dernier maillon de la résolution."
+      ],
+      "falsehoods": [
+        "Il détient une copie des adresses de tous les domaines.",
+        "Il est choisi au hasard à chaque requête.",
+        "Sa réponse est valable pour toujours.",
+        "C'est le premier serveur interrogé."
+      ],
+      "explanation": "Le serveur faisant autorité est le dernier étage : il donne l'adresse du domaine et la durée pendant laquelle on peut la retenir."
+    },
+    {
+      "subject": "le cache et le TTL",
+      "truths": [
+        "Le TTL est la durée pendant laquelle une réponse peut être gardée.",
+        "Pendant le TTL, le résolveur répond sans refaire toute l'enquête.",
+        "Un TTL court permet de changer plus vite d'adresse.",
+        "Le cache évite de parcourir la hiérarchie à chaque requête."
+      ],
+      "falsehoods": [
+        "Le TTL est le nombre de serveurs à interroger.",
+        "Un TTL court rend les changements d'adresse plus lents à se propager.",
+        "Après la fin du TTL, la réponse reste valable encore une heure.",
+        "Le cache est vidé à chaque nouvelle page visitée."
+      ],
+      "explanation": "Le TTL dit combien de temps une réponse peut rester en cache. Plus il est court, plus un changement d'adresse se propage vite."
+    },
+    {
+      "subject": "les types d'enregistrements",
+      "truths": [
+        "Un enregistrement A associe un nom à une adresse IPv4.",
+        "Un enregistrement AAAA associe un nom à une adresse IPv6.",
+        "Un enregistrement MX indique le serveur qui reçoit le courrier.",
+        "Un enregistrement CNAME fait d'un nom l'alias d'un autre."
+      ],
+      "falsehoods": [
+        "Un enregistrement A associe un nom à une adresse IPv6.",
+        "Un enregistrement MX indique le serveur qui héberge les pages web.",
+        "Un enregistrement CNAME donne directement l'adresse IP.",
+        "Un enregistrement AAAA contient le mot de passe du domaine."
+      ],
+      "explanation": "A pour IPv4, AAAA pour IPv6, MX pour le courrier, CNAME pour un alias."
+    },
+    {
+      "subject": "le transport du DNS",
+      "truths": [
+        "Une requête DNS classique passe en UDP sur le port 53.",
+        "TCP prend le relais quand la réponse est trop grosse.",
+        "Une requête DNS classique n'est pas chiffrée.",
+        "DNS over HTTPS cache le contenu des requêtes à un observateur du réseau."
+      ],
+      "falsehoods": [
+        "Une requête DNS classique passe en TCP sur le port 443.",
+        "Une requête DNS classique est toujours chiffrée.",
+        "UDP est interdit pour le DNS.",
+        "Le port du DNS est 22."
+      ],
+      "explanation": "Le DNS classique utilise UDP sur le port 53, en clair ; DNS over HTTPS le protège."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "la résolution d'un nom sans cache",
+      "items": [
+        "Le navigateur interroge le résolveur",
+        "Le résolveur interroge un serveur racine",
+        "Le résolveur interroge le serveur du TLD",
+        "Le résolveur interroge le serveur faisant autorité",
+        "Le résolveur renvoie l'adresse au navigateur"
+      ],
+      "explanation": "Le résolveur descend la hiérarchie : racine, TLD, serveur faisant autorité, puis il répond au navigateur."
+    },
+    {
+      "subject": "les serveurs interrogés pour trouver une adresse",
+      "items": [
+        "La racine",
+        "Le serveur du TLD",
+        "Le serveur faisant autorité"
+      ],
+      "explanation": "On descend du plus général (la racine) au plus précis (le serveur du domaine)."
+    }
+  ]
+}

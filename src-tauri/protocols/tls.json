@@ -1,0 +1,146 @@
+{
+  "topics": [
+    {
+      "subject": "ce que TLS garantit",
+      "truths": [
+        "La confidentialité : personne d'autre ne peut lire les données.",
+        "L'intégrité : une modification en route est détectée.",
+        "L'authenticité : on sait à qui l'on parle, grâce au certificat.",
+        "TLS ne rend pas un site honnête pour autant."
+      ],
+      "falsehoods": [
+        "La rapidité : TLS accélère les échanges.",
+        "Un site qui utilise TLS est forcément digne de confiance.",
+        "TLS cache aussi l'adresse IP du serveur à un observateur.",
+        "TLS garantit seulement l'absence de modification, pas la confidentialité."
+      ],
+      "explanation": "TLS apporte confidentialité, intégrité et authenticité. Il ne cache pas l'adresse du serveur et ne dit rien de l'honnêteté du site."
+    },
+    {
+      "subject": "SSL et TLS",
+      "truths": [
+        "SSL est l'ancien nom de TLS.",
+        "SSL 3.0 est abandonné car il est cassé.",
+        "On utilise aujourd'hui TLS 1.2 et surtout TLS 1.3.",
+        "Un certificat dit « SSL » est en réalité un certificat utilisé avec TLS."
+      ],
+      "falsehoods": [
+        "SSL est la version la plus récente de TLS.",
+        "SSL 3.0 est le choix recommandé aujourd'hui.",
+        "TLS 1.0 est la version la plus moderne.",
+        "SSL et TLS sont deux protocoles sans aucun lien."
+      ],
+      "explanation": "TLS a succédé à SSL, aujourd'hui abandonné. On utilise TLS 1.2 et 1.3."
+    },
+    {
+      "subject": "le secret partagé",
+      "truths": [
+        "Le client et le serveur calculent chacun le même secret.",
+        "Le secret n'est jamais envoyé sur le réseau.",
+        "Chaque côté envoie sa clé publique éphémère.",
+        "Un espion qui a vu les clés publiques ne peut pas retrouver le secret."
+      ],
+      "falsehoods": [
+        "Le client choisit le secret et l'envoie au serveur en clair.",
+        "Le secret est transmis à l'intérieur du certificat.",
+        "Les clés privées sont échangées pendant la poignée de main.",
+        "Un espion qui a vu les clés publiques retrouve facilement le secret."
+      ],
+      "explanation": "Chacun combine sa clé privée avec la clé publique de l'autre pour obtenir le même secret, qui ne circule jamais."
+    },
+    {
+      "subject": "le certificat",
+      "truths": [
+        "Un certificat lie un nom de domaine à une clé publique.",
+        "Il est signé par une autorité de certification.",
+        "Il a une date de validité.",
+        "Le client vérifie que le nom du certificat correspond au site visité."
+      ],
+      "falsehoods": [
+        "Un certificat contient la clé privée du serveur.",
+        "Un certificat est signé par le client.",
+        "Un certificat est valable pour toujours.",
+        "Le certificat sert à compresser les données."
+      ],
+      "explanation": "Le certificat associe un nom à une clé publique, signé par une autorité, pour une durée limitée. La clé privée ne s'y trouve jamais."
+    },
+    {
+      "subject": "la vérification du certificat",
+      "truths": [
+        "Le client contrôle la signature de l'autorité.",
+        "Le client contrôle que le certificat n'est pas expiré.",
+        "Le client connaît d'avance les autorités auxquelles il fait confiance.",
+        "Un doute sur le certificat doit faire refuser la connexion."
+      ],
+      "falsehoods": [
+        "Le client accepte tout certificat, pourvu qu'il soit présent.",
+        "Le serveur vérifie le certificat à la place du client.",
+        "Le client demande à l'autorité d'envoyer la clé privée du serveur.",
+        "Le client ignore la date du certificat."
+      ],
+      "explanation": "C'est le client qui vérifie signature, date et nom. Sans cette vérification, n'importe qui pourrait se faire passer pour le serveur."
+    },
+    {
+      "subject": "le ClientHello",
+      "truths": [
+        "Le ClientHello est le premier message de la poignée de main.",
+        "Il liste les algorithmes que le client sait utiliser.",
+        "Il contient déjà la clé publique éphémère du client en TLS 1.3.",
+        "Il indique le nom du site visé (SNI)."
+      ],
+      "falsehoods": [
+        "Le ClientHello est envoyé par le serveur.",
+        "Il contient le certificat du client.",
+        "Il contient le secret partagé.",
+        "Il est envoyé après les données de l'application."
+      ],
+      "explanation": "Le ClientHello ouvre la poignée de main : algorithmes, clé publique éphémère et nom du site."
+    },
+    {
+      "subject": "la poignée de main TLS 1.3",
+      "truths": [
+        "Elle ne demande qu'un aller-retour avant d'envoyer des données chiffrées.",
+        "Dès le ServerHello, la suite des échanges est chiffrée.",
+        "Le serveur prouve qu'il possède la clé privée de son certificat.",
+        "Elle se termine par des messages Finished."
+      ],
+      "falsehoods": [
+        "Elle demande trois allers-retours.",
+        "Le certificat circule en clair, avant tout chiffrement.",
+        "Elle commence par l'envoi du certificat.",
+        "Elle ne contient aucun message de fin."
+      ],
+      "explanation": "En TLS 1.3, un seul aller-retour suffit, et le certificat est déjà chiffré. Les messages Finished confirment que tout concorde."
+    },
+    {
+      "subject": "ce que voit un espion",
+      "truths": [
+        "Il voit l'adresse du serveur contacté.",
+        "Il voit la taille et le moment des échanges.",
+        "Il ne voit pas le contenu échangé.",
+        "Il ne peut pas modifier un échange sans que cela soit détecté."
+      ],
+      "falsehoods": [
+        "Il lit tout le contenu échangé.",
+        "Il voit le mot de passe tapé par l'utilisateur.",
+        "Il ne voit pas l'adresse du serveur.",
+        "Il peut modifier les données sans être détecté."
+      ],
+      "explanation": "L'espion voit qui parle à qui, et quand, mais ni le contenu ni la possibilité de le modifier en silence."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "la poignée de main TLS 1.3",
+      "items": [
+        "ClientHello",
+        "ServerHello",
+        "Certificat du serveur",
+        "Finished du serveur",
+        "Finished du client",
+        "Données chiffrées"
+      ],
+      "explanation": "Le client ouvre, le serveur répond et prouve son identité, les deux confirment avec Finished, puis les données passent chiffrées."
+    }
+  ]
+}

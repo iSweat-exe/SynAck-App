@@ -1,0 +1,119 @@
+/* Global base and layout. Tokens live in theme/tokens.css, components in theme/components.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: var(--font);
+  font-size: 16px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  /* Space Mono is wide: a slightly smaller size and a looser line keep long text readable. */
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+/*
+ * Scrollbars, in the same language as the rest: an outlined pill that slides in a grooved track,
+ * pink like a pressed chip. WebKit and Chromium draw them from these pseudo-elements; elsewhere the
+ * standard properties give a plain colored bar. (Monaco draws its own scrollbars.)
+ */
+::-webkit-scrollbar {
+  width: 1rem;
+  height: 1rem;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--inset);
+  border-left: var(--u) solid var(--outline);
+}
+
+::-webkit-scrollbar-thumb {
+  min-height: 2.5rem;
+  border: var(--u) solid var(--outline);
+  border-radius: 999px;
+  background: var(--brand);
+  /* The track shows around the thumb, so it reads as sitting in a groove. */
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-bevel);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--brand);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--inset);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  :root {
+    scrollbar-color: var(--brand) var(--inset);
+  }
+}
+
+::selection {
+  background: var(--selection);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Numbers that change over time (timers, counters, scores) must not shift the layout. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.screen {
+  display: grid;
+  gap: 1rem;
+}
+
+.runner-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tools {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

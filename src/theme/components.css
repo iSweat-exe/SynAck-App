@@ -1,0 +1,2345 @@
+/* Neo-brutalist components: thick outline, hard drop shadow (no blur), colored bevel, rounded corners. */
+
+/* Buttons */
+
+.btn {
+  min-height: 2.5rem;
+  padding: 0 1.25rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    var(--shadow-offset) var(--shadow-offset) 0 var(--shadow),
+    inset calc(-1 * var(--bevel)) calc(-1 * var(--bevel)) 0 var(--btn-bevel);
+  transition-property: transform, box-shadow;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.btn-primary {
+  --btn-bg: var(--brand);
+  --btn-bevel: var(--brand-bevel);
+  color: var(--on-primary);
+}
+
+.btn-secondary {
+  --btn-bg: var(--secondary-bg);
+  --btn-bevel: var(--secondary-bevel);
+}
+
+/* Hover nudges the button toward its shadow; press sinks it all the way. */
+.btn:hover:not(:disabled) {
+  transform: translate(calc(var(--shadow-offset) / 3), calc(var(--shadow-offset) / 3));
+  box-shadow:
+    calc(var(--shadow-offset) * 2 / 3) calc(var(--shadow-offset) * 2 / 3) 0 var(--shadow),
+    inset calc(-1 * var(--bevel)) calc(-1 * var(--bevel)) 0 var(--btn-bevel);
+}
+
+.btn:active:not(:disabled) {
+  transform: translate(var(--shadow-offset), var(--shadow-offset));
+  box-shadow:
+    0 0 0 var(--shadow),
+    inset calc(-1 * var(--bevel)) calc(-1 * var(--bevel)) 0 var(--btn-bevel);
+}
+
+.btn:disabled {
+  --btn-bg: var(--disabled-bg);
+  --btn-bevel: var(--disabled-bevel);
+  color: var(--disabled-ink);
+  box-shadow: inset calc(-1 * var(--bevel)) calc(-1 * var(--bevel)) 0 var(--btn-bevel);
+  cursor: default;
+}
+
+/* Every control gets the same ring when reached by keyboard (not on mouse clicks). */
+:focus-visible {
+  outline: var(--u) solid var(--focus-ring);
+  outline-offset: var(--u);
+}
+
+/* Monaco draws its own focus state. */
+.monaco-editor :focus-visible {
+  outline: none;
+}
+
+.quiz-option:has(input:focus-visible) {
+  outline: var(--u) solid var(--focus-ring);
+  outline-offset: var(--u);
+}
+
+/* Form fields */
+
+.field {
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+/* Surfaces */
+
+.card {
+  padding: 1rem 1.25rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-offset-lg) var(--shadow-offset-lg) 0 var(--card-shadow, var(--shadow));
+}
+
+.card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.card ol {
+  margin: 0.75rem 0 0;
+  padding-left: 1.5rem;
+}
+
+.card-detail {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.code-editor {
+  /* Tall enough to write a real solution, and never taller than the window. */
+  height: clamp(26rem, 64vh, 52rem);
+  overflow: hidden;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-offset-lg) var(--shadow-offset-lg) 0 var(--card-shadow, var(--shadow));
+}
+
+/* Code and output: one outline per level. Cards carry the thick outline; what is inside them is
+   an inset (darker background, thin hairline), never a second thick frame. */
+
+.snippet {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--inset);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.snippet-error {
+  border-color: var(--danger-fg);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+/* Small capital labels give the structure; the text under them stays plain. */
+
+h3.label {
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+
+.label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* Messages and badges: the color is never the only cue, there is always a text label. */
+
+.alert {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+}
+
+.alert-danger {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.alert-success {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.alert .btn {
+  margin-left: 0.5rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 1.5rem;
+  padding: 0 0.6rem;
+  border: var(--u) solid var(--outline);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge-success {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.badge-danger {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.badge-warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+/* Switch: the knob only slides (150 ms). Pink on the right is on, gray on the left is off. */
+
+.switch-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  width: 4.125rem;
+  height: 2.25rem;
+  flex: none;
+  padding: 0;
+  border: var(--u) solid var(--outline);
+  border-radius: 999px;
+  background: var(--secondary-bg);
+  cursor: pointer;
+  box-shadow: var(--u) var(--u) 0 var(--shadow);
+}
+
+.switch-knob {
+  position: absolute;
+  top: 50%;
+  left: 0.1875rem;
+  width: 2.5rem;
+  height: 1.6875rem;
+  border-radius: 999px;
+  background: var(--knob-off);
+  transform: translateY(-50%);
+  transition-property: transform, background-color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease-out;
+}
+
+.switch[aria-checked="true"] .switch-knob {
+  background: var(--brand);
+  transform: translate(1rem, -50%);
+}
+
+/* Statement text (Markdown) */
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  margin: 0 0 0.75rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25rem;
+}
+
+.prose li {
+  margin-bottom: 0.25rem;
+}
+
+.prose :not(pre) > code {
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--inset);
+  font-size: 0.88em;
+  overflow-wrap: anywhere;
+}
+
+.prose .snippet {
+  margin-bottom: 0.75rem;
+}
+
+/* Exercise list: the whole card is a button that lifts toward its shadow on hover. */
+
+.exercise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exercise-grid li {
+  display: flex;
+}
+
+.exercise-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition-property: transform, box-shadow;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.exercise-card:hover {
+  transform: translate(var(--u), var(--u));
+  box-shadow: 0 0 0 var(--shadow);
+}
+
+/* Pressed: the card sinks all the way into its shadow, as the buttons do. */
+.exercise-card:active {
+  transform: translate(var(--shadow-offset), var(--shadow-offset));
+  box-shadow: 0 0 0 var(--shadow);
+}
+
+.exercise-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.exercise-card-summary {
+  flex: 1;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.exercise-card-topics {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.exercise-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Solving an exercise */
+
+.solver-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.6rem;
+}
+
+.solver-title .badge {
+  font-size: 0.75rem;
+}
+
+.solver-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* The statement: sections separated by dashed rules, as on a ticket. */
+
+.statement {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.statement .card {
+  display: grid;
+  gap: 1rem;
+}
+
+.spec {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem 1.5rem;
+  padding-top: 1rem;
+  border-top: var(--u) dashed var(--hairline);
+}
+
+.spec section {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+.callout {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  border: var(--u) solid var(--callout-edge);
+  border-radius: var(--radius-lg);
+  background: var(--callout-bg);
+  color: var(--callout-fg);
+}
+
+h3.label.callout-label,
+.callout .label {
+  color: var(--callout-label);
+}
+
+.example {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: var(--u) dashed var(--hairline);
+}
+
+.example-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.example-grid > div {
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+}
+
+/* Results: tallies first, then one line per success, and details only for what failed. */
+
+.verdict {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tallies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.verdict-text {
+  margin: 0;
+  font-weight: 700;
+}
+
+.verdict-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.result-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passed {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.failure {
+  padding: 0.5rem 0.75rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.failure summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  cursor: pointer;
+}
+
+.failure-title {
+  font-weight: 700;
+}
+
+.failure-hint {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+.comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.comparison > div {
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+}
+
+.comparison-input {
+  grid-column: 1 / -1;
+}
+
+.lines {
+  display: grid;
+  padding: 0.5rem 0;
+}
+
+.line {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 0.75rem;
+  white-space: pre-wrap;
+}
+
+.line-number {
+  flex: none;
+  min-width: 2ch;
+  color: var(--muted);
+  text-align: right;
+  user-select: none;
+}
+
+.line-gap {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* The wrong line in the output is red; the line it should have been is green. */
+.line-wrong,
+.line-expected {
+  font-weight: 700;
+}
+
+.line-wrong {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.line-expected {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.line-wrong .line-number,
+.line-expected .line-number {
+  color: inherit;
+}
+
+@media (max-width: 56rem) {
+  .solver-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Application shell. The sidebar comes first and spans the full height; the navbar and the page
+   sit side by side with it, the navbar above the page. */
+
+.shell {
+  --navbar-height: 3.25rem;
+  --sidebar-width: 17rem;
+
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.5rem;
+  height: 100vh;
+  padding: 1rem;
+  border-right: var(--u) solid var(--outline);
+  background: var(--surface);
+}
+
+/* The name of the app, set like the old logo: "Ack" in a pink block. */
+.wordmark {
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.wordmark-ack {
+  margin-left: 0.2rem;
+  padding: 0.15rem 0.4rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: var(--on-primary);
+}
+
+.sidebar ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-item {
+  position: relative;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: var(--u) solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition-property: background-color, border-color;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.nav-item:hover {
+  border-color: var(--outline);
+}
+
+.nav-item:active {
+  background: var(--inset);
+}
+
+.nav-item[aria-current="page"] {
+  color: var(--on-primary);
+}
+
+/* The highlight is its own element so that it can glide from one item to the next. */
+.nav-pill {
+  position: absolute;
+  inset: calc(-1 * var(--u));
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--brand);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--shadow);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-item .icon,
+.nav-item-label,
+.nav-item-meta {
+  position: relative;
+}
+
+.nav-item .icon {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.nav-item-label {
+  flex: 1;
+}
+
+/* Quiet: it says where you stand, it is not an action. */
+.nav-item-meta {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.shell-main {
+  display: grid;
+  grid-template-rows: var(--navbar-height) 1fr;
+  min-width: 0;
+}
+
+/* Empty for now. */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: var(--u) solid var(--outline);
+  background: var(--surface);
+}
+
+/* The page is centered in the space left of the sidebar. */
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 96rem;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+}
+
+/* Exercise list: the filters on the left, the exercises next to them. */
+
+.exercises-page {
+  max-width: 82rem;
+  margin: 0 auto;
+}
+
+.exercises-layout {
+  display: grid;
+  grid-template-columns: 20rem minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.filters {
+  position: sticky;
+  top: calc(var(--navbar-height) + 1.5rem);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.filter-group {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filters .field {
+  width: 100%;
+  min-width: 0;
+}
+
+.filter-group legend {
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* A toggle pill: outlined, filled pink while pressed. */
+.chip {
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: var(--u) solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition-property: background-color, transform;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.chip:hover {
+  background: var(--inset);
+}
+
+.chip:active {
+  transform: translate(var(--u), var(--u));
+}
+
+.chip[aria-pressed="true"]:hover {
+  background: var(--brand);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--brand);
+  color: var(--on-primary);
+}
+
+.filter-footer {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: var(--u) dashed var(--hairline);
+}
+
+.filter-footer p {
+  margin: 0;
+}
+
+.empty {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
+.empty p {
+  margin: 0;
+}
+
+@media (max-width: 56rem) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: var(--u) solid var(--outline);
+  }
+
+  .sidebar ul {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+  }
+
+  .exercises-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filters {
+    position: static;
+  }
+}
+
+/* Icons: drawn in the color of the text around them. */
+
+.icon {
+  flex: none;
+  width: 1em;
+  height: 1em;
+}
+
+.badge .icon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/* Solved: a green shadow, the title struck through, a green frame around the editor. */
+
+.exercise-card[data-solved="true"],
+.code-editor[data-solved="true"] {
+  --card-shadow: var(--success-accent);
+}
+
+.exercise-card[data-solved="true"] .exercise-card-title {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--success-accent);
+  text-decoration-thickness: var(--u);
+}
+
+/* The success panel. It happens rarely and matters: it is staged, not instant. */
+
+.solved {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--success-bg);
+  color: var(--success-fg);
+  box-shadow: var(--shadow-offset-lg) var(--shadow-offset-lg) 0 var(--success-accent);
+  animation: rise 0.3s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.solved-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: var(--u) solid var(--outline);
+  border-radius: 50%;
+  background: var(--success-accent);
+  color: var(--on-primary);
+  animation: pop 0.3s cubic-bezier(0.2, 0, 0, 1) 0.1s both;
+}
+
+.solved-badge .icon {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.solved-body {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.solved-body > * {
+  margin: 0;
+  animation: rise 0.3s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.solved-body > :nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.solved-body > :nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.solved-body > :nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.solved-body > :nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.solved-body > :nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.solved-title {
+  font-size: 1.4rem;
+}
+
+.solved-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.solved-progress progress {
+  width: 12rem;
+  height: 1.25rem;
+  border: var(--u) solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+  appearance: none;
+}
+
+.solved-progress progress::-webkit-progress-bar {
+  background: var(--surface);
+}
+
+.solved-progress progress::-webkit-progress-value {
+  background: var(--success-accent);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.25;
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    scale: 1;
+    filter: blur(0);
+  }
+}
+
+/* Buttons: full width, with an icon; and the danger variant (sign out). */
+
+.btn-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.btn .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.btn-danger {
+  --btn-bg: var(--danger-bg);
+  --btn-bevel: var(--danger-accent);
+  color: var(--danger-fg);
+}
+
+/* The account, at the bottom of the sidebar. */
+
+.account {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: var(--u) dashed var(--hairline);
+}
+
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 2.5rem;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms;
+}
+
+.account-identity:hover,
+.account-identity[aria-current="page"] {
+  background: var(--inset);
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.profile-card .avatar {
+  width: 5rem;
+  height: 5rem;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.profile-stat {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.account-text {
+  min-width: 0;
+}
+
+.account-name,
+.account-provider {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-name {
+  font-weight: 700;
+}
+
+.account-provider {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.avatar {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: var(--u) solid var(--outline);
+  border-radius: 50%;
+  background: var(--inset);
+  object-fit: cover;
+}
+
+.avatar-initials {
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: var(--on-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* The login page: a ticket on a dashed background. */
+
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: var(--bg);
+  /* Short diagonal dashes on a staggered grid (an inline image: `img-src` allows `data:`). */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cg stroke='%23d1cace' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M7 15l6-6'/%3E%3Cpath d='M27 35l6-6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.wordmark-large {
+  padding: 0;
+  font-size: 2.4rem;
+}
+
+/* The outline and the hard shadow are drawn on the wrapper so they follow the torn edge. */
+.ticket-wrap {
+  width: min(27rem, 100%);
+  filter: drop-shadow(var(--u) 0 0 var(--outline))
+    drop-shadow(calc(-1 * var(--u)) 0 0 var(--outline)) drop-shadow(0 var(--u) 0 var(--outline))
+    drop-shadow(0 calc(-1 * var(--u)) 0 var(--outline)) drop-shadow(8px 8px 0 var(--shadow));
+  animation: rise 0.3s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.ticket {
+  --tooth: 14px;
+
+  position: relative;
+  display: grid;
+  padding: 2rem;
+  background: var(--surface);
+}
+
+/* The torn bottom edge: a row of downward triangles under the paper. */
+.ticket::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: var(--tooth);
+  background: conic-gradient(from -45deg at 50% 100%, var(--surface) 90deg, transparent 0) 0 0 /
+    calc(var(--tooth) * 2) var(--tooth) repeat-x;
+}
+
+.ticket > * + * {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: var(--u) dashed var(--hairline);
+}
+
+.ticket-header {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.ticket-tagline {
+  margin: 0;
+  color: var(--muted);
+}
+
+.ticket-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.ticket-section p {
+  margin: 0;
+}
+
+.ticket-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.4rem;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: 0;
+  accent-color: var(--brand-bevel);
+}
+
+.provider-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.login-status {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  min-height: 3rem;
+}
+
+.ticket-footer {
+  gap: 1rem;
+}
+
+/* A decorative barcode. */
+.barcode {
+  height: 2.5rem;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink) 0 2px,
+    transparent 2px 5px,
+    var(--ink) 5px 6px,
+    transparent 6px 9px,
+    var(--ink) 9px 12px,
+    transparent 12px 14px
+  );
+}
+
+/* The settings link and the account, at the bottom of the sidebar. */
+
+.sidebar-footer {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* The settings page: a row of sections, then the section. */
+
+.subnav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subnav .nav-item {
+  width: auto;
+  padding: 0 1rem;
+}
+
+.setting-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+.setting-text {
+  min-width: 0;
+}
+
+.setting-title,
+.setting-help {
+  margin: 0;
+}
+
+.setting-title {
+  font-weight: 700;
+}
+
+.setting-help {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+:root[data-theme="dark"] .login {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cg stroke='%2340394c' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M7 15l6-6'/%3E%3Cpath d='M27 35l6-6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* A button that is working: a small ring turns before its label. Honest, it has no progress. */
+.btn[aria-busy="true"]::before {
+  content: "";
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.6rem;
+  border: var(--u) solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -0.1em;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+/* The size of the code against the limit the Rust side enforces. Quiet until it matters. */
+.code-size {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.code-size-near {
+  color: var(--warning-fg);
+}
+
+.code-size-over {
+  color: var(--danger-fg);
+  font-weight: 700;
+}
+
+.quiz-option:active {
+  background: var(--secondary-bg);
+}
+
+/*
+ * Page transitions (React <ViewTransition>). Between sections: a short fade. Between a list and its
+ * detail: the new page slides in from the side it comes from. Short, because they are frequent.
+ */
+
+::view-transition-old(.page-out) {
+  animation: page-fade-out 0.12s ease-out both;
+}
+
+::view-transition-new(.page-in) {
+  animation: page-fade-in 0.18s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+::view-transition-old(.depth-out-forward) {
+  animation: depth-out-left 0.16s ease-in both;
+}
+
+::view-transition-new(.depth-in-forward) {
+  animation: depth-in-right 0.24s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+::view-transition-old(.depth-out-back) {
+  animation: depth-out-right 0.16s ease-in both;
+}
+
+::view-transition-new(.depth-in-back) {
+  animation: depth-in-left 0.24s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes depth-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+}
+
+@keyframes depth-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+@keyframes depth-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+@keyframes depth-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* The breadcrumb, in the navbar. The separators are drawn by CSS: they are not content. */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+}
+
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.breadcrumb li + li::before {
+  content: "/";
+  padding: 0 0.5rem;
+  color: var(--muted);
+}
+
+.breadcrumb-link,
+.breadcrumb-current {
+  min-height: 2.5rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+
+.breadcrumb-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.25em;
+  transition-property: background-color, color;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.breadcrumb-link:hover {
+  background: var(--inset);
+  color: var(--ink);
+}
+
+.breadcrumb-link:active {
+  background: var(--secondary-bg);
+}
+
+.breadcrumb-current {
+  max-width: 28rem;
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The right of the navbar. */
+
+.navbar {
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.navbar-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-search,
+.navbar-streak,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition-property: background-color, transform;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.navbar-search {
+  min-width: 13rem;
+  padding: 0 0.75rem;
+  font-weight: 400;
+}
+
+.navbar-search kbd {
+  margin-left: auto;
+  padding: 0 0.4rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--inset);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.navbar-streak {
+  padding: 0 0.75rem;
+}
+
+.icon-button {
+  justify-content: center;
+  width: 2.5rem;
+  padding: 0;
+}
+
+.navbar-search .icon,
+.navbar-streak .icon,
+.icon-button .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.navbar-search:hover:not(:disabled),
+.navbar-streak:hover:not(:disabled),
+.icon-button:hover:not(:disabled) {
+  background: var(--inset);
+}
+
+.navbar-search:active:not(:disabled),
+.navbar-streak:active:not(:disabled),
+.icon-button:active:not(:disabled) {
+  transform: translate(var(--u), var(--u));
+}
+
+/* A placeholder: visibly not available yet, with a dashed outline instead of a solid one. */
+.navbar-search:disabled,
+.navbar-streak:disabled,
+.icon-button:disabled {
+  border-style: dashed;
+  border-color: var(--hairline);
+  color: var(--muted);
+  cursor: default;
+}
+
+@media (max-width: 1100px) {
+  .navbar-search span,
+  .navbar-search kbd {
+    display: none;
+  }
+
+  .navbar-search {
+    min-width: 0;
+    width: 2.5rem;
+    justify-content: center;
+  }
+}
+
+/* The experience bar: the level, how far along the next one is, and the exact figure. */
+
+.xp {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.xp-level {
+  font-weight: 700;
+}
+
+.xp-track {
+  width: 8rem;
+  height: 0.9rem;
+  overflow: hidden;
+  border: var(--u) solid var(--outline);
+  border-radius: 999px;
+  background: var(--inset);
+}
+
+.xp-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--brand);
+  transform-origin: left;
+  transition-property: transform;
+  transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.xp-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1250px) {
+  .xp-count {
+    display: none;
+  }
+}
+
+/* A section announced but not built: dashed, greyed, no hover. */
+.nav-item:disabled {
+  border: var(--u) dashed var(--hairline);
+  color: var(--muted);
+  cursor: default;
+}
+
+.nav-item:disabled:hover,
+.nav-item:disabled:active {
+  border-color: var(--hairline);
+  background: transparent;
+}
+
+/* The name of the app and the stage it is at, side by side. */
+.brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+/* Onboarding: the questions asked once, after the first sign-in. */
+
+.onboarding {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.onboarding-card {
+  display: grid;
+  gap: 1.25rem;
+  width: min(42rem, 100%);
+  padding: 2rem;
+  animation: rise 0.3s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.onboarding-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.onboarding-step {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.onboarding-bar {
+  height: 0.9rem;
+  overflow: hidden;
+  border: var(--u) solid var(--outline);
+  border-radius: 999px;
+  background: var(--inset);
+}
+
+.onboarding-bar-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--brand);
+  transform-origin: left;
+  transition-property: transform;
+  transition-duration: 0.3s;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.onboarding-step-fields {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.onboarding-title {
+  padding: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.onboarding-title:focus {
+  outline: none;
+}
+
+.onboarding-help {
+  margin: 0;
+  color: var(--muted);
+}
+
+.onboarding-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.5rem;
+}
+
+.onboarding-option-text {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.onboarding-option-label {
+  font-weight: 700;
+}
+
+.onboarding-option-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.onboarding-skip {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.onboarding-skip-button {
+  justify-self: start;
+  min-height: 2.5rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+}
+
+.onboarding-skip-button:hover {
+  background: var(--inset);
+}
+
+/*
+ * The page backgrounds. A fixed layer beside the sidebar, below the page. Each page has its own
+ * tile; the layer slides by exactly one tile (--tile) in the direction (--dx, --dy), so that the
+ * loop is seamless. About 0.7 px per second: slow enough to be felt rather than seen.
+ */
+.page-bg {
+  position: fixed;
+  top: var(--navbar-height);
+  right: 0;
+  bottom: 0;
+  left: var(--sidebar-width);
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  animation: bg-in 0.8s ease-out both;
+}
+
+.page-bg-layer {
+  position: absolute;
+  inset: calc(-1 * var(--tile));
+  background-size: var(--tile) var(--tile);
+  opacity: 0.55;
+  will-change: transform;
+  animation: bg-drift var(--drift, 50s) linear infinite;
+}
+
+@keyframes bg-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes bg-drift {
+  to {
+    transform: translate(calc(var(--tile) * var(--dx)), calc(var(--tile) * var(--dy)));
+  }
+}
+
+/* Exercises: a grid of dots, drifting down and to the right. */
+.page-bg-exercises .page-bg-layer {
+  --tile: 32px;
+  --dx: 1;
+  --dy: 1;
+
+  background-image: radial-gradient(circle, var(--hairline) 1.5px, transparent 2px);
+}
+
+/* Protocols: diagonal lines, like traffic on a wire, sliding sideways. */
+.page-bg-protocols .page-bg-layer {
+  --tile: 48px;
+  --dx: -1;
+  --dy: 0;
+  --drift: 40s;
+
+  background-image: linear-gradient(
+    135deg,
+    transparent 48.5%,
+    var(--hairline) 48.5% 51.5%,
+    transparent 51.5%
+  );
+}
+
+/* Profile: concentric rings, rising. */
+.page-bg-profile .page-bg-layer {
+  --tile: 140px;
+  --dx: 0;
+  --dy: -1;
+  --drift: 90s;
+
+  background-image: radial-gradient(
+    circle,
+    transparent 0 22px,
+    var(--hairline) 22px 24px,
+    transparent 24px 46px,
+    var(--hairline) 46px 48px,
+    transparent 48px
+  );
+}
+
+/* Settings: graph paper, drifting up and to the right. */
+.page-bg-settings .page-bg-layer {
+  --tile: 56px;
+  --dx: 1;
+  --dy: -1;
+  --drift: 70s;
+
+  background-image:
+    linear-gradient(var(--hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
+}
+
+/* Rewards: the XP bar and the coins celebrate what was just earned. */
+
+.xp {
+  position: relative;
+}
+
+.xp-level-wrap,
+.coins-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.xp-track {
+  position: relative;
+}
+
+.xp-fill {
+  transition: none;
+}
+
+/* A light that sweeps once over the bar when it fills. */
+.xp-shine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--surface) 75%, transparent),
+    transparent
+  );
+}
+
+.coins {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.coins .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.coins-flip {
+  display: inline-flex;
+}
+
+/* "+20 XP", "+10": it appears under what changed, then fades. The page behind stays readable. */
+.gain-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 20;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--shadow);
+}
+
+.burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.burst-dot {
+  position: absolute;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin: -0.2rem 0 0 -0.2rem;
+  border: 1px solid var(--outline);
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.solved-reward {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* An exercise already solved: a banner that stays in view under the navbar while the page scrolls. */
+.solved-banner {
+  position: sticky;
+  top: calc(var(--navbar-height) + 0.5rem);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--success-bg);
+  color: var(--success-fg);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--success-accent);
+  animation: rise 0.3s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.solved-banner p {
+  margin: 0;
+}
+
+.solved-banner .icon {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.runner-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.runner-reset .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/*
+ * The shop: a window over everything, with a margin all round. A native <dialog>, so the browser
+ * traps the focus, closes it on Escape and makes the page behind it inert. It fades and rises in,
+ * and the page behind darkens a little. Browsers that cannot animate a dialog opening and closing
+ * (`allow-discrete`) just show it and hide it.
+ */
+.coins {
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition-property: background-color;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.coins:hover {
+  background: var(--inset);
+}
+
+.shop {
+  position: fixed;
+  inset: 1.5rem;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 8px 8px 0 var(--shadow);
+  opacity: 0;
+  transform: translateY(12px) scale(0.985);
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 0.22s;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  transition-behavior: allow-discrete;
+}
+
+.shop[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  opacity: 1;
+  transform: none;
+}
+
+@starting-style {
+  .shop[open] {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+}
+
+/* A fixed dark veil, in both themes: it only has to dim what is behind the window. */
+.shop::backdrop {
+  background: rgb(20 16 26 / 0.5);
+  opacity: 0;
+  transition-property: opacity, display, overlay;
+  transition-duration: 0.22s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+.shop[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .shop[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* The page behind does not scroll while the shop is open. */
+body:has(.shop[open]) {
+  overflow: hidden;
+}
+
+.shop-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: var(--u) solid var(--outline);
+  background: var(--surface);
+}
+
+.shop-heading {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.shop-heading h2,
+.shop-heading p {
+  margin: 0;
+}
+
+.shop-heading p {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.shop-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 700;
+}
+
+.shop-balance .icon,
+.shop-price .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.shop-body {
+  display: grid;
+  align-content: start;
+  gap: 2rem;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.shop-shelf {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.shop-shelf h3 {
+  margin: 0;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The text takes the spare height, so that every price and button line up from card to card. */
+.shop-item {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 0.75rem;
+}
+
+.shop-art-tile {
+  display: grid;
+  place-items: center;
+  height: 8rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--inset);
+}
+
+/* Sixteen pixels of six: a whole number, so the edges stay sharp. */
+.shop-art {
+  width: 6rem;
+  height: 6rem;
+  overflow: visible;
+}
+
+.shop-item-name,
+.shop-item-description {
+  margin: 0;
+}
+
+.shop-item-name {
+  font-size: 1rem;
+}
+
+.shop-item-description {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.shop-item-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.shop-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.shop-missing {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.shop-footer {
+  padding: 0.75rem 1.5rem;
+  border-top: var(--u) dashed var(--hairline);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* The pixel art: two tones, ink and paper. They are roles, so the drawings invert in dark mode. */
+.pixel-ink {
+  fill: var(--ink);
+}
+
+.pixel-paper {
+  fill: var(--surface);
+}
+
+/*
+ * The update button in the navbar. Quiet (version number) when there is nothing to do, pink with the
+ * new version when an update waits, a filling bar while it downloads, green once it is installed.
+ * The state is always in the words too, never only in the color.
+ */
+.update-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  overflow: hidden;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition-property: background-color, transform, box-shadow;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+
+.update-button .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.update-button[data-state="idle"],
+.update-button[data-state="upToDate"] {
+  border-color: var(--hairline);
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.update-button:hover:not(:disabled) {
+  background: var(--inset);
+}
+
+.update-button:active:not(:disabled) {
+  transform: translate(var(--u), var(--u));
+}
+
+.update-button[data-state="available"] {
+  background: var(--brand);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--shadow);
+}
+
+.update-button[data-state="available"]:hover:not(:disabled) {
+  background: var(--brand);
+  transform: translate(calc(var(--shadow-offset) / 3), calc(var(--shadow-offset) / 3));
+  box-shadow: calc(var(--shadow-offset) * 2 / 3) calc(var(--shadow-offset) * 2 / 3) 0 var(--shadow);
+}
+
+.update-button[data-state="available"]:active:not(:disabled) {
+  transform: translate(var(--shadow-offset), var(--shadow-offset));
+  box-shadow: none;
+}
+
+.update-button[data-state="ready"] {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.update-button[data-state="failed"] {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.update-button:disabled {
+  cursor: default;
+}
+
+.update-version {
+  padding: 0 0.4rem;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+/* The download: a bar that fills behind the words. */
+.update-progress {
+  position: absolute;
+  inset: 0;
+  background: var(--success-bg);
+  transform-origin: left;
+  transition-property: transform;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-out;
+}
+
+.update-above {
+  position: relative;
+  color: var(--success-fg);
+}
+
+.update-notes {
+  max-height: 16rem;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1250px) {
+  .update-button[data-state="idle"] .update-text,
+  .update-button[data-state="upToDate"] .update-text {
+    display: none;
+  }
+}

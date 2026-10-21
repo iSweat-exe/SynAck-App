@@ -1,0 +1,28 @@
+{
+  "id": "factorial",
+  "title": "Factorielle",
+  "difficulty": "easy",
+  "summary": "Calcule n! : le produit de tous les entiers de 1 à n.",
+  "topics": [
+    "Boucles",
+    "Calculs"
+  ],
+  "statement": "La **factorielle** de `n`, notée `n!`, est le produit de tous les entiers de `1` à `n` : `4! = 1 × 2 × 3 × 4 = 24`.",
+  "input": "Un entier `n` (0 ≤ n ≤ 15).",
+  "output": "La valeur de `n!`.",
+  "notes": "Par définition, `0! = 1`.",
+  "examples": [
+    {
+      "input": "5\n",
+      "output": "120"
+    },
+    {
+      "input": "0\n",
+      "output": "1"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\n\n# Affiche n!\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\n\n// Affiche n!\n"
+  }
+}

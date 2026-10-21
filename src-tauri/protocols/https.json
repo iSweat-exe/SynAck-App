@@ -1,0 +1,145 @@
+{
+  "topics": [
+    {
+      "subject": "la différence entre HTTPS et HTTP",
+      "truths": [
+        "HTTPS est HTTP transporté dans une connexion TLS.",
+        "Les requêtes et les réponses ont le même format qu'en HTTP.",
+        "La différence est que les échanges sont chiffrés.",
+        "HTTPS utilise le port 443 par défaut."
+      ],
+      "falsehoods": [
+        "HTTPS est un protocole entièrement différent de HTTP.",
+        "HTTPS utilise des requêtes d'un autre format.",
+        "HTTPS utilise le port 80 par défaut.",
+        "HTTPS remplace TCP par TLS."
+      ],
+      "explanation": "HTTPS, c'est HTTP inchangé, à l'intérieur de TLS (lui-même sur TCP), sur le port 443."
+    },
+    {
+      "subject": "le cadenas du navigateur",
+      "truths": [
+        "Le cadenas indique que la connexion est chiffrée.",
+        "Il indique que le certificat est valide pour ce domaine.",
+        "Un site d'hameçonnage peut afficher un cadenas.",
+        "Il ne garantit pas que le site est honnête."
+      ],
+      "falsehoods": [
+        "Le cadenas garantit que le site est digne de confiance.",
+        "Un site qui affiche un cadenas ne peut pas être malveillant.",
+        "Le cadenas signifie que le contenu du site a été vérifié par ton fournisseur d'accès.",
+        "Le cadenas cache ton adresse IP aux sites visités."
+      ],
+      "explanation": "Le cadenas parle du chiffrement et du domaine, pas de l'honnêteté du site : un site frauduleux peut en avoir un."
+    },
+    {
+      "subject": "l'ordre des opérations",
+      "truths": [
+        "La connexion TCP s'ouvre avant la poignée de main TLS.",
+        "La poignée de main TLS a lieu avant l'envoi de la requête HTTP.",
+        "La requête HTTP part déjà chiffrée.",
+        "Le DNS est interrogé avant l'ouverture de la connexion TCP."
+      ],
+      "falsehoods": [
+        "La poignée de main TLS a lieu avant l'ouverture de la connexion TCP.",
+        "La requête HTTP part en clair, puis la connexion est chiffrée.",
+        "Le DNS est interrogé après l'envoi de la requête.",
+        "Il n'y a pas d'étape TCP en HTTPS."
+      ],
+      "explanation": "D'abord le DNS, puis TCP, puis TLS, et enfin la requête HTTP, déjà chiffrée."
+    },
+    {
+      "subject": "ce que voit un espion sur un Wi-Fi public",
+      "truths": [
+        "Il voit à quel serveur le navigateur parle.",
+        "Il ne voit pas l'adresse complète de la page demandée.",
+        "Il ne voit ni les cookies ni les mots de passe.",
+        "Il voit des octets illisibles à la place du contenu."
+      ],
+      "falsehoods": [
+        "Il voit l'adresse complète de la page demandée.",
+        "Il lit les mots de passe envoyés.",
+        "Il peut modifier la page reçue sans que le navigateur s'en aperçoive.",
+        "Il ne voit même pas qu'une connexion existe."
+      ],
+      "explanation": "L'espion voit le serveur contacté et des octets illisibles : ni la page, ni les cookies, ni le contenu."
+    },
+    {
+      "subject": "les ports 80 et 443",
+      "truths": [
+        "Le port 443 est le port habituel d'HTTPS.",
+        "Le port 80 est le port habituel d'HTTP.",
+        "Un serveur peut écouter sur les deux ports à la fois.",
+        "Le navigateur choisit le port d'après https:// ou http://."
+      ],
+      "falsehoods": [
+        "Le port 443 est le port habituel d'HTTP.",
+        "Le port 22 est le port habituel d'HTTPS.",
+        "Un serveur ne peut pas écouter sur deux ports.",
+        "Le schéma https:// ne change rien au port utilisé."
+      ],
+      "explanation": "http:// mène au port 80, https:// au port 443, et un serveur peut écouter les deux."
+    },
+    {
+      "subject": "le certificat d'un site",
+      "truths": [
+        "Il doit correspondre au nom de domaine visité.",
+        "Un certificat expiré fait afficher un avertissement.",
+        "Il est délivré par une autorité de certification.",
+        "Le navigateur contient une liste d'autorités de confiance."
+      ],
+      "falsehoods": [
+        "Le même certificat convient à n'importe quel domaine.",
+        "Un certificat expiré est accepté sans avertissement.",
+        "Le certificat est délivré par le navigateur lui-même.",
+        "Le navigateur fait confiance à toute autorité inconnue."
+      ],
+      "explanation": "Le certificat doit correspondre au domaine, être valide, et venir d'une autorité que le navigateur connaît."
+    },
+    {
+      "subject": "ce que HTTPS ne protège pas",
+      "truths": [
+        "L'adresse IP du serveur reste visible.",
+        "Le site lui-même reçoit tes données en clair.",
+        "Un site malveillant reste malveillant même en HTTPS.",
+        "Un programme malveillant installé sur ton ordinateur voit tout."
+      ],
+      "falsehoods": [
+        "Le site lui-même ne voit pas tes données.",
+        "HTTPS te rend anonyme auprès du site visité.",
+        "HTTPS empêche un site d'hameçonnage d'exister.",
+        "HTTPS protège contre un virus installé sur ton ordinateur."
+      ],
+      "explanation": "HTTPS protège le trajet, pas les extrémités : le site reçoit tes données et ton ordinateur doit rester sain."
+    },
+    {
+      "subject": "le coût d'HTTPS",
+      "truths": [
+        "HTTPS ajoute une poignée de main TLS à l'ouverture de la connexion.",
+        "Cette poignée de main coûte un aller-retour avec TLS 1.3.",
+        "Une fois ouverte, la connexion peut servir à plusieurs requêtes.",
+        "Le chiffrement ajoute peu de travail sur un ordinateur moderne."
+      ],
+      "falsehoods": [
+        "HTTPS rend chaque requête dix fois plus lente.",
+        "TLS 1.3 demande plus d'allers-retours que les versions précédentes.",
+        "Il faut refaire la poignée de main TLS avant chaque requête.",
+        "Le chiffrement n'est possible que sur un serveur spécialisé."
+      ],
+      "explanation": "La poignée de main se fait une fois à l'ouverture ; ensuite la connexion sert pour plusieurs requêtes à bas coût."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "l'ouverture d'une connexion sécurisée vers un site",
+      "items": [
+        "Le navigateur interroge le DNS",
+        "Le navigateur ouvre la connexion TCP",
+        "La poignée de main TLS",
+        "La requête HTTP chiffrée",
+        "La réponse HTTP chiffrée"
+      ],
+      "explanation": "On trouve l'adresse (DNS), on ouvre TCP, on installe TLS, puis HTTP circule chiffré."
+    }
+  ]
+}

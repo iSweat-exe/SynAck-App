@@ -1,0 +1,27 @@
+{
+  "id": "fizzbuzz",
+  "title": "FizzBuzz",
+  "difficulty": "easy",
+  "summary": "Le classique : Fizz, Buzz et FizzBuzz selon les multiples de 3 et de 5.",
+  "topics": [
+    "Boucles",
+    "Conditions"
+  ],
+  "statement": "Affiche les nombres de `1` à `n`, **un par ligne**, en remplaçant certains par un mot :\n\n- divisible par `3` : `Fizz` ;\n- divisible par `5` : `Buzz` ;\n- divisible par `3` **et** par `5` : `FizzBuzz`.",
+  "input": "Un entier `n` (1 ≤ n ≤ 100).",
+  "output": "`n` lignes.",
+  "examples": [
+    {
+      "input": "5\n",
+      "output": "1\n2\nFizz\n4\nBuzz"
+    },
+    {
+      "input": "15\n",
+      "output": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\n\n# Affiche les lignes de 1 à n.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\n\n// Affiche les lignes de 1 à n.\n"
+  }
+}

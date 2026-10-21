@@ -1,0 +1,27 @@
+{
+  "id": "tips",
+  "title": "Total des pourboires",
+  "difficulty": "medium",
+  "summary": "Additionne les pourboires de plusieurs tables, chacun calculé en pourcentage.",
+  "topics": [
+    "Boucles",
+    "Calculs"
+  ],
+  "statement": "Dans un restaurant, chaque table laisse un pourboire égal à un **pourcentage** de son addition. Calcule le **total des pourboires** de la soirée.",
+  "input": "- ligne 1 : `k`, le nombre de tables (1 ≤ k ≤ 8) ;\n- puis `k` lignes : l'addition (un entier d'euros) et le pourcentage de pourboire (un entier), séparés par un espace.",
+  "output": "Une seule ligne, avec le total **arrondi à 2 décimales** (point décimal) :\n\n```plaintext\nTotal des pourboires : 12.50 €\n```",
+  "examples": [
+    {
+      "input": "1\n40 15\n",
+      "output": "Total des pourboires : 6.00 €"
+    },
+    {
+      "input": "2\n18 12\n45 15\n",
+      "output": "Total des pourboires : 8.91 €"
+    }
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nk = int(lines[0])\n\n# Pour chaque table : addition et pourcentage, sur les k lignes suivantes.\n# Affiche : Total des pourboires : ... €\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst k = Number(lines[0]);\n\n// Pour chaque table : addition et pourcentage, sur les k lignes suivantes.\n// Affiche : Total des pourboires : ... €\n"
+  }
+}

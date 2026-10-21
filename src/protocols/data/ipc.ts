@@ -1,0 +1,90 @@
+import { ipcLessons } from "../lessons/ipc";
+import type { Protocol } from "../types";
+
+export const ipc: Protocol = {
+  id: "ipc",
+  name: "IPC",
+  fullName: "Inter-Process Communication",
+  tagline: "Comment deux programmes d'une même machine se parlent.",
+  difficulty: "medium",
+  topics: ["Système"],
+  prerequisites: [],
+  notions: ["Savoir ce qu'est un processus : un programme en cours d'exécution"],
+  purpose: [
+    "Chaque processus vit dans sa propre mémoire, isolée par le système : l'un ne peut pas lire les variables de l'autre. Pour échanger, il faut passer par le noyau, qui offre plusieurs mécanismes : les tubes (pipes), les sockets locales (Unix ou tubes nommés sous Windows), la mémoire partagée, les signaux, les files de messages.",
+    "Ce n'est pas un protocole unique, mais une famille. Le principe est toujours le même : un processus écrit, le noyau transporte, l'autre lit. Ici, c'est un tube.",
+    "SynAck en est un exemple : l'interface (dans la WebView) et le moteur Rust sont deux contextes séparés. Quand l'interface appelle une commande, un message passe par un canal géré par Tauri, et la réponse revient par le même chemin.",
+  ],
+  takeaways: [
+    "Deux processus ne partagent pas leur mémoire : tout passe par le noyau.",
+    "Un tube est à sens unique, une socket locale va dans les deux sens.",
+    "Un message doit être sérialisé (par exemple en JSON) pour traverser la frontière.",
+    "Un processus qui lit un tube vide se met en attente, sans consommer de CPU.",
+  ],
+  facts: [
+    { label: "Portée", value: "Une seule machine" },
+    { label: "Mécanismes", value: "Tubes, sockets locales, mémoire partagée, signaux" },
+    { label: "Intermédiaire", value: "Le noyau du système" },
+    { label: "Exemple", value: "Interface ↔ moteur Rust dans Tauri" },
+  ],
+  lessons: ipcLessons,
+  actors: [
+    { id: "a", name: "Processus A", role: "ex. l'interface", state: "Actif" },
+    { id: "kernel", name: "Noyau", role: "le système d'exploitation" },
+    { id: "b", name: "Processus B", role: "ex. le moteur Rust", state: "En attente" },
+  ],
+  steps: [
+    {
+      from: "a",
+      to: "a",
+      label: "Prépare le message",
+      note: "Le message doit être de simples octets pour traverser la frontière entre processus. A le sérialise ici en JSON.",
+      detail: '{"commande":"lister_exercices"}',
+    },
+    {
+      from: "a",
+      to: "kernel",
+      label: "write() dans le tube",
+      note: "A ne peut pas écrire dans la mémoire de B. Il demande donc au noyau d'écrire dans le tube qui les relie.",
+      detail: 'write(tube, \'{"commande":"lister_exercices"}\')',
+      tone: "brand",
+    },
+    {
+      from: "kernel",
+      to: "kernel",
+      label: "Copie dans le tampon",
+      note: "Le noyau copie les octets dans un tampon qu'il garde en mémoire, le temps que B vienne les chercher.",
+    },
+    {
+      from: "kernel",
+      to: "b",
+      label: "Réveille B",
+      note: "B dormait, bloqué dans un read() sur le tube. Le noyau le réveille et lui remet les octets.",
+      detail: "read(tube) → 31 octets",
+      states: { b: "Actif" },
+    },
+    {
+      from: "b",
+      to: "b",
+      label: "Traite la demande",
+      note: "B décode le message, fait le travail demandé, et prépare sa réponse.",
+    },
+    {
+      from: "b",
+      to: "kernel",
+      label: "write() la réponse",
+      note: "La réponse prend le chemin inverse, par un second tube (ou par la même socket, qui va dans les deux sens).",
+      detail: "write(tube_retour, '{\"exercices\":[…]}')",
+      tone: "brand",
+      states: { b: "En attente" },
+    },
+    {
+      from: "kernel",
+      to: "a",
+      label: "Livre la réponse",
+      note: "Le noyau remet les octets à A, qui les décode. L'échange est terminé, sans qu'aucun des deux ait touché à la mémoire de l'autre.",
+      tone: "success",
+    },
+  ],
+  related: ["tcp", "ssh"],
+};

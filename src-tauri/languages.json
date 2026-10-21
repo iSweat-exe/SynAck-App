@@ -1,0 +1,310 @@
+[
+  {
+    "id": "python",
+    "name": "Python",
+    "detect": {
+      "commands": [
+        "python3",
+        "python",
+        "py"
+      ],
+      "versionArgs": [
+        "--version"
+      ]
+    },
+    "install": {
+      "windows": {
+        "url": "https://www.python.org/downloads/",
+        "steps": [
+          "Dans un terminal : winget install --id Python.Python.3.14",
+          "Ou téléchargez l'installeur sur python.org et cochez « Add python.exe to PATH ».",
+          "Cliquez sur « Revérifier » : SynAck relit le PATH de Windows, inutile de le rouvrir."
+        ]
+      },
+      "macos": {
+        "url": "https://www.python.org/downloads/",
+        "steps": [
+          "Dans un terminal : brew install python",
+          "Cliquez sur « Revérifier »."
+        ]
+      },
+      "linux": {
+        "url": "https://www.python.org/downloads/",
+        "steps": [
+          "Debian/Ubuntu : sudo apt install python3",
+          "Fedora : sudo dnf install python3",
+          "Cliquez sur « Revérifier »."
+        ]
+      }
+    },
+    "run": {
+      "file": "main.py",
+      "exec": {
+        "program": "{tool}",
+        "args": [
+          "-u",
+          "main.py"
+        ]
+      },
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONUTF8": "1"
+      }
+    }
+  },
+  {
+    "id": "javascript",
+    "name": "JavaScript (Node.js)",
+    "detect": {
+      "commands": [
+        "node"
+      ],
+      "versionArgs": [
+        "--version"
+      ]
+    },
+    "install": {
+      "windows": {
+        "url": "https://nodejs.org/",
+        "steps": [
+          "Dans un terminal : winget install OpenJS.NodeJS.LTS",
+          "Cliquez sur « Revérifier » : SynAck relit le PATH de Windows, inutile de le rouvrir."
+        ]
+      },
+      "macos": {
+        "url": "https://nodejs.org/",
+        "steps": [
+          "Dans un terminal : brew install node",
+          "Cliquez sur « Revérifier »."
+        ]
+      },
+      "linux": {
+        "url": "https://nodejs.org/",
+        "steps": [
+          "Debian/Ubuntu : sudo apt install nodejs",
+          "Fedora : sudo dnf install nodejs",
+          "Cliquez sur « Revérifier »."
+        ]
+      }
+    },
+    "run": {
+      "file": "main.js",
+      "exec": {
+        "program": "{tool}",
+        "args": [
+          "main.js"
+        ]
+      }
+    }
+  },
+  {
+    "id": "c",
+    "name": "C",
+    "detect": {
+      "commands": [
+        "gcc",
+        "clang",
+        "cc"
+      ],
+      "versionArgs": [
+        "--version"
+      ]
+    },
+    "install": {
+      "windows": {
+        "url": "https://www.msys2.org/",
+        "steps": [
+          "Installez MSYS2 : winget install MSYS2.MSYS2",
+          "Dans le terminal « MSYS2 UCRT64 » : pacman -S mingw-w64-ucrt-x86_64-gcc",
+          "Ajoutez C:\\msys64\\ucrt64\\bin à la variable d'environnement PATH.",
+          "Cliquez sur « Revérifier » : SynAck relit le PATH de Windows, inutile de le rouvrir."
+        ]
+      },
+      "macos": {
+        "url": "https://developer.apple.com/xcode/resources/",
+        "steps": [
+          "Dans un terminal : xcode-select --install",
+          "Cliquez sur « Revérifier »."
+        ]
+      },
+      "linux": {
+        "url": "https://gcc.gnu.org/",
+        "steps": [
+          "Debian/Ubuntu : sudo apt install build-essential",
+          "Fedora : sudo dnf install gcc",
+          "Cliquez sur « Revérifier »."
+        ]
+      }
+    },
+    "run": {
+      "file": "main.c",
+      "compile": {
+        "args": [
+          "main.c",
+          "-o",
+          "{out}"
+        ]
+      },
+      "exec": {
+        "program": "{out}",
+        "args": []
+      }
+    }
+  },
+  {
+    "id": "cpp",
+    "name": "C++",
+    "detect": {
+      "commands": [
+        "g++",
+        "clang++",
+        "c++"
+      ],
+      "versionArgs": [
+        "--version"
+      ]
+    },
+    "install": {
+      "windows": {
+        "url": "https://www.msys2.org/",
+        "steps": [
+          "Installez MSYS2 : winget install MSYS2.MSYS2",
+          "Dans le terminal « MSYS2 UCRT64 » : pacman -S mingw-w64-ucrt-x86_64-gcc",
+          "Ajoutez C:\\msys64\\ucrt64\\bin à la variable d'environnement PATH.",
+          "Cliquez sur « Revérifier » : SynAck relit le PATH de Windows, inutile de le rouvrir."
+        ]
+      },
+      "macos": {
+        "url": "https://developer.apple.com/xcode/resources/",
+        "steps": [
+          "Dans un terminal : xcode-select --install",
+          "Cliquez sur « Revérifier »."
+        ]
+      },
+      "linux": {
+        "url": "https://gcc.gnu.org/",
+        "steps": [
+          "Debian/Ubuntu : sudo apt install build-essential",
+          "Fedora : sudo dnf install gcc-c++",
+          "Cliquez sur « Revérifier »."
+        ]
+      }
+    },
+    "run": {
+      "file": "main.cpp",
+      "compile": {
+        "args": [
+          "main.cpp",
+          "-o",
+          "{out}"
+        ]
+      },
+      "exec": {
+        "program": "{out}",
+        "args": []
+      }
+    }
+  },
+  {
+    "id": "go",
+    "name": "Go",
+    "detect": {
+      "commands": [
+        "go"
+      ],
+      "versionArgs": [
+        "version"
+      ]
+    },
+    "install": {
+      "windows": {
+        "url": "https://go.dev/dl/",
+        "steps": [
+          "Dans un terminal : winget install GoLang.Go",
+          "Cliquez sur « Revérifier » : SynAck relit le PATH de Windows, inutile de le rouvrir."
+        ]
+      },
+      "macos": {
+        "url": "https://go.dev/dl/",
+        "steps": [
+          "Dans un terminal : brew install go",
+          "Cliquez sur « Revérifier »."
+        ]
+      },
+      "linux": {
+        "url": "https://go.dev/dl/",
+        "steps": [
+          "Debian/Ubuntu : sudo apt install golang-go",
+          "Ou installez la dernière version depuis go.dev/dl.",
+          "Cliquez sur « Revérifier »."
+        ]
+      }
+    },
+    "run": {
+      "file": "main.go",
+      "compile": {
+        "args": [
+          "build",
+          "-o",
+          "{out}",
+          "main.go"
+        ]
+      },
+      "exec": {
+        "program": "{out}",
+        "args": []
+      }
+    }
+  },
+  {
+    "id": "rust",
+    "name": "Rust",
+    "detect": {
+      "commands": [
+        "rustc"
+      ],
+      "versionArgs": [
+        "--version"
+      ]
+    },
+    "install": {
+      "windows": {
+        "url": "https://rustup.rs/",
+        "steps": [
+          "Dans un terminal : winget install Rustlang.Rustup",
+          "Il faut aussi les Build Tools de Visual Studio (composant « Développement Desktop en C++ »).",
+          "Cliquez sur « Revérifier » : SynAck relit le PATH de Windows, inutile de le rouvrir."
+        ]
+      },
+      "macos": {
+        "url": "https://rustup.rs/",
+        "steps": [
+          "Dans un terminal : curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
+          "Cliquez sur « Revérifier »."
+        ]
+      },
+      "linux": {
+        "url": "https://rustup.rs/",
+        "steps": [
+          "Dans un terminal : curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
+          "Cliquez sur « Revérifier »."
+        ]
+      }
+    },
+    "run": {
+      "file": "main.rs",
+      "compile": {
+        "args": [
+          "--edition=2024",
+          "main.rs",
+          "-o",
+          "{out}"
+        ]
+      },
+      "exec": {
+        "program": "{out}",
+        "args": []
+      }
+    }
+  }
+]

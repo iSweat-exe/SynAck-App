@@ -1,0 +1,154 @@
+name: Release
+
+# Publishes a version: pushing a tag `vMAJOR.MINOR.PATCH` (SemVer, see docs/RELEASING.md) builds the
+# installers for Windows, macOS and Linux, signs the update files with the Tauri key, and creates the
+# GitHub release. Installed applications then find the new version by themselves: they read
+# `latest.json` from the latest release (see `plugins.updater` in src-tauri/tauri.conf.json).
+#
+# The release is created as a draft and published only when every platform is built, so that
+# `latest.json` never points at a half-finished release.
+#
+# Needs two secrets (docs/RELEASING.md): TAURI_SIGNING_PRIVATE_KEY and its password
+# TAURI_SIGNING_PRIVATE_KEY_PASSWORD.
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Check the version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      notes: ${{ steps.version.outputs.notes }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: A release comes from main
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::The tag $GITHUB_REF_NAME is not on main. Merge first, then tag main."
+            exit 1
+          fi
+
+      - name: The tag, the five version files and the changelog agree
+        id: version
+        run: |
+          node scripts/version.mjs check --tag "$GITHUB_REF_NAME"
+          version=$(node scripts/version.mjs current)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          case "$version" in
+            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+          # Fails when CHANGELOG.md has no notes for this version: they are shown to the learners.
+          node scripts/version.mjs notes "$version" > release-notes.md
+          {
+            echo "notes<<RELEASE_NOTES_EOF"
+            cat release-notes.md
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: The signing secrets are set
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          for name in KEY PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Secret TAURI_SIGNING_PRIVATE_KEY(_PASSWORD) is missing: see docs/RELEASING.md."
+              exit 1
+            fi
+          done
+
+  build:
+    name: Build (${{ matrix.name }})
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            args: --bundles nsis
+          - name: macOS (Apple silicon)
+            os: macos-latest
+            args: --target aarch64-apple-darwin --bundles app,dmg
+          - name: macOS (Intel)
+            os: macos-latest
+            args: --target x86_64-apple-darwin --bundles app,dmg
+          - name: Linux
+            os: ubuntu-22.04
+            args: --bundles deb,appimage
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Linux dependencies (WebKit, tray, keyring)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev pkg-config patchelf
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache-workspaces: src-tauri
+          target: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: SynAck ${{ github.ref_name }}
+          releaseBody: ${{ needs.prepare.outputs.notes }}
+          releaseDraft: true
+          prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
+          args: ${{ matrix.args }}
+
+  publish:
+    name: Publish the release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: The update manifest is there
+        run: |
+          assets=$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
+          echo "$assets"
+          if ! echo "$assets" | grep -qx "latest.json"; then
+            echo "::error::latest.json is missing from the release: installed applications could not update."
+            exit 1
+          fi
+
+      - name: Publish
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false

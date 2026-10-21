@@ -1,0 +1,2 @@
+-- Local development seed data, loaded by `supabase start` / `supabase db reset` after the migrations.
+-- Keep it free of secrets and real personal data.

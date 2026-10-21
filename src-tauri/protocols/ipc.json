@@ -1,0 +1,157 @@
+{
+  "topics": [
+    {
+      "subject": "ce qu'est l'IPC",
+      "truths": [
+        "L'IPC est la communication entre deux processus.",
+        "Chaque processus a sa propre mémoire, isolée des autres.",
+        "Deux processus ne peuvent pas lire les variables l'un de l'autre.",
+        "L'IPC passe par le système d'exploitation."
+      ],
+      "falsehoods": [
+        "L'IPC est la communication entre deux ordinateurs.",
+        "Deux processus partagent la même mémoire par défaut.",
+        "Un processus peut lire directement les variables d'un autre.",
+        "L'IPC se fait obligatoirement par Internet."
+      ],
+      "explanation": "L'IPC fait communiquer des processus isolés d'une même machine, par l'intermédiaire du système."
+    },
+    {
+      "subject": "le rôle du noyau",
+      "truths": [
+        "Le noyau transporte le message d'un processus à l'autre.",
+        "Un processus demande au noyau d'écrire dans le tube.",
+        "Le noyau garde un tampon le temps que le destinataire lise.",
+        "Le noyau protège la mémoire de chaque processus."
+      ],
+      "falsehoods": [
+        "Le noyau n'intervient pas dans l'IPC.",
+        "Un processus écrit directement dans la mémoire de l'autre.",
+        "Le noyau lit le message à la place du destinataire puis le jette.",
+        "Le noyau efface la mémoire d'un processus à chaque échange."
+      ],
+      "explanation": "Le noyau est le facteur : il copie le message dans un tampon et le remet au destinataire, sans que les processus se touchent."
+    },
+    {
+      "subject": "les tubes",
+      "truths": [
+        "Un tube transporte des octets dans un seul sens.",
+        "Ce qu'un processus écrit à un bout est lu à l'autre bout.",
+        "Dans un shell, le symbole | relie la sortie d'une commande à l'entrée de la suivante.",
+        "Un processus qui lit un tube vide attend."
+      ],
+      "falsehoods": [
+        "Un tube transporte les données dans les deux sens à la fois.",
+        "Un processus qui lit un tube vide plante.",
+        "Un tube relie deux ordinateurs distants.",
+        "Dans un shell, le symbole | efface la sortie de la commande."
+      ],
+      "explanation": "Un tube est un canal à sens unique : on écrit d'un côté, on lit de l'autre, et lire un tube vide met en attente."
+    },
+    {
+      "subject": "les sockets locales",
+      "truths": [
+        "Une socket locale permet de communiquer dans les deux sens.",
+        "Sous Unix, une socket locale passe par un fichier spécial.",
+        "Sous Windows, les tubes nommés jouent un rôle proche.",
+        "Une socket locale ne passe pas par le réseau."
+      ],
+      "falsehoods": [
+        "Une socket locale ne transporte les données que dans un sens.",
+        "Une socket locale envoie les messages sur Internet.",
+        "Les sockets locales n'existent que sous Windows.",
+        "Une socket locale demande l'accord d'un serveur distant."
+      ],
+      "explanation": "Une socket locale est bidirectionnelle et reste sur la machine : sous Windows, les tubes nommés jouent ce rôle."
+    },
+    {
+      "subject": "la mémoire partagée",
+      "truths": [
+        "Deux processus peuvent se partager une zone de mémoire.",
+        "C'est le moyen le plus rapide d'échanger beaucoup de données.",
+        "Les processus doivent se coordonner pour ne pas écrire en même temps.",
+        "Le noyau met la zone à disposition des deux processus."
+      ],
+      "falsehoods": [
+        "La mémoire est partagée automatiquement entre tous les processus.",
+        "Elle est toujours plus lente qu'un tube.",
+        "Aucune coordination n'est nécessaire entre les processus.",
+        "Elle donne accès à toute la mémoire de l'autre processus."
+      ],
+      "explanation": "Une zone partagée évite les copies donc va vite, mais les processus doivent se coordonner, et seule cette zone est commune."
+    },
+    {
+      "subject": "la sérialisation d'un message",
+      "truths": [
+        "Un message doit être transformé en octets pour passer d'un processus à l'autre.",
+        "JSON est un format courant pour sérialiser un message.",
+        "Le destinataire doit décoder le message reçu.",
+        "Les deux processus doivent s'accorder sur le format."
+      ],
+      "falsehoods": [
+        "Un objet en mémoire peut être transmis tel quel, sans transformation.",
+        "La sérialisation n'est nécessaire qu'entre ordinateurs distants.",
+        "Le destinataire reçoit un message qu'il n'a pas besoin de décoder.",
+        "Chaque processus peut choisir librement son format sans se concerter."
+      ],
+      "explanation": "Seuls des octets traversent la frontière : on sérialise (par exemple en JSON), et le destinataire décode, d'après un format commun."
+    },
+    {
+      "subject": "les signaux",
+      "truths": [
+        "Un signal est une notification très simple envoyée à un processus.",
+        "Un signal ne transporte pas de données complexes.",
+        "Ctrl+C dans un terminal envoie un signal au programme.",
+        "Un processus peut décider comment réagir à certains signaux."
+      ],
+      "falsehoods": [
+        "Un signal transporte un fichier entier.",
+        "Un signal ne peut jamais arrêter un processus.",
+        "Ctrl+C envoie un message JSON au programme.",
+        "Un processus ne peut réagir à aucun signal."
+      ],
+      "explanation": "Un signal est une simple notification, comme Ctrl+C : pas de données, et un programme peut choisir sa réaction."
+    },
+    {
+      "subject": "l'exemple de SynAck",
+      "truths": [
+        "Dans SynAck, l'interface et le moteur Rust sont deux contextes séparés.",
+        "L'interface appelle une commande du moteur en lui envoyant un message.",
+        "La réponse du moteur revient à l'interface par le même chemin.",
+        "C'est le moteur, et non l'interface, qui décide si un exercice est résolu."
+      ],
+      "falsehoods": [
+        "L'interface lit directement la mémoire du moteur.",
+        "L'interface juge elle-même si un exercice est résolu.",
+        "Le moteur envoie ses réponses à l'interface par courrier électronique.",
+        "L'interface et le moteur n'échangent aucun message."
+      ],
+      "explanation": "L'interface et le moteur Rust sont séparés et échangent des messages : c'est le moteur qui juge et enregistre la réussite."
+    }
+  ],
+  "sequences": [
+    {
+      "subject": "un échange par tube entre deux processus",
+      "items": [
+        "A prépare et sérialise le message",
+        "A demande au noyau d'écrire dans le tube",
+        "Le noyau copie le message dans un tampon",
+        "Le noyau remet le message à B",
+        "B traite la demande",
+        "B renvoie sa réponse par le noyau"
+      ],
+      "explanation": "Le message passe toujours par le noyau, dans les deux sens."
+    },
+    {
+      "subject": "la lecture d'un tube vide",
+      "items": [
+        "B lit le tube",
+        "Le tube est vide : B se met en attente",
+        "A écrit dans le tube",
+        "Le noyau réveille B",
+        "B reçoit le message"
+      ],
+      "explanation": "B dort sans consommer de processeur jusqu'à ce que le noyau le réveille."
+    }
+  ]
+}
