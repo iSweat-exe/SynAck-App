@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 
 interface CheckIconProps {
   strokeWidth?: number;
@@ -9,6 +9,8 @@ interface CheckIconProps {
 /** A check mark. Drawn with `currentColor` so the surrounding text color decides its color. */
 export function CheckIcon({ strokeWidth = 2, draw = false }: CheckIconProps) {
   const path = "M5 12.5l4.5 4.5L19 7.5";
+  // Someone who asked for less motion sees the mark at once, already drawn.
+  const reduceMotion = useReducedMotion();
   return (
     <svg
       className="icon"
@@ -20,7 +22,7 @@ export function CheckIcon({ strokeWidth = 2, draw = false }: CheckIconProps) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {draw ? (
+      {draw && reduceMotion !== true ? (
         <motion.path
           d={path}
           initial={{ pathLength: 0 }}
