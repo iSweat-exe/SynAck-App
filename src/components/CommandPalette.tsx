@@ -36,7 +36,7 @@ function PaletteBody({ exercises, onSelect }: PaletteBodyProps) {
   return (
     <>
       <input
-        type="search"
+        type="text"
         className="field palette-input"
         placeholder="Chercher un exercice, un protocole, une page…"
         aria-label="Rechercher"
