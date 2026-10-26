@@ -9,7 +9,7 @@ export interface Browsable {
   difficulty: Difficulty;
 }
 
-export type Status = "all" | "solved" | "todo";
+export type Status = "all" | "solved" | "todo" | "progress";
 
 /** What the learner asked for in the filter panel. An empty group means "no restriction". */
 export interface Criteria {
@@ -60,17 +60,34 @@ function matchesAny(selected: readonly string[], offered: readonly string[]): bo
   return selected.length === 0 || selected.some((value) => offered.includes(value));
 }
 
+function matchesStatus(status: Status, done: boolean, inProgress: boolean): boolean {
+  switch (status) {
+    case "all":
+      return true;
+    case "solved":
+      return done;
+    case "todo":
+      return !done;
+    case "progress":
+      return !done && inProgress;
+  }
+}
+
+const NONE: ReadonlySet<string> = new Set();
+
 /**
  * Keeps the items matching every criterion.
  *
  * @param doneIds ids of the items done (an exercise solved, a protocol validated)
  * @param languagesOf the languages an item is offered in; none by default
+ * @param inProgressIds ids of the items started and not done; none by default
  */
 export function filterItems<Item extends Browsable>(
   items: readonly Item[],
   doneIds: ReadonlySet<string>,
   criteria: Criteria,
   languagesOf: (item: Item) => readonly string[] = () => [],
+  inProgressIds: ReadonlySet<string> = NONE,
 ): Item[] {
   return items.filter((item) => {
     const done = doneIds.has(item.id);
@@ -79,7 +96,7 @@ export function filterItems<Item extends Browsable>(
       matchesAny(criteria.difficulties, [item.difficulty]) &&
       matchesAny(criteria.languages, languagesOf(item)) &&
       matchesAny(criteria.topics, item.topics) &&
-      (criteria.status === "all" || (criteria.status === "solved") === done)
+      matchesStatus(criteria.status, done, inProgressIds.has(item.id))
     );
   });
 }
@@ -88,13 +105,21 @@ export function filterItems<Item extends Browsable>(
  * Keeps the exercises matching every criterion.
  *
  * @param solvedIds ids of the exercises solved in at least one language
+ * @param inProgressIds ids of the exercises started and not solved
  */
 export function filterExercises(
   exercises: readonly Exercise[],
   solvedIds: ReadonlySet<string>,
   criteria: Criteria,
+  inProgressIds: ReadonlySet<string> = NONE,
 ): Exercise[] {
-  return filterItems(exercises, solvedIds, criteria, (exercise) => Object.keys(exercise.starters));
+  return filterItems(
+    exercises,
+    solvedIds,
+    criteria,
+    (exercise) => Object.keys(exercise.starters),
+    inProgressIds,
+  );
 }
 
 /** The distinct values of a field across the catalog, in a stable order. */

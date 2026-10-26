@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { Environment } from "../environment/useEnvironment";
+import { draftKey, inProgressIds } from "../exercises/drafts";
 import { distinct, filterExercises, NO_FILTER, type Criteria } from "../exercises/filter";
 import { nextUnsolved } from "../exercises/next";
+import type { Drafts } from "../exercises/useDrafts";
 import type { Exercises } from "../exercises/useExercises";
 import { navigate } from "../transitions";
 import { rewardOf, type Reward } from "../xp";
@@ -12,6 +14,8 @@ import { ExerciseSolver } from "./ExerciseSolver";
 
 interface ExercisesScreenProps {
   exercises: Exercises;
+  /** The code the learner wrote, kept while they browse and between launches. */
+  drafts: Drafts;
   environment: Environment;
   onOpenEnvironment: () => void;
   /** Called when an exercise is solved for the first time, before the progress is read again. */
@@ -23,14 +27,13 @@ interface ExercisesScreenProps {
 
 export function ExercisesScreen({
   exercises,
+  drafts,
   environment,
   onOpenEnvironment,
   onReward,
   selectedId,
   onSelect,
 }: ExercisesScreenProps) {
-  // The learner's work in progress, kept while they browse: "<exercise>:<language>" -> code.
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
   // Kept here, not in the list, so the filters survive opening an exercise and coming back.
   const [criteria, setCriteria] = useState<Criteria>(NO_FILTER);
 
@@ -45,7 +48,6 @@ export function ExercisesScreen({
 
   const selected = catalog.exercises.find((exercise) => exercise.id === selectedId);
   if (selected) {
-    const draftKey = (language: string) => `${selected.id}:${language}`;
     return (
       <DepthTransition key={selected.id}>
         <ExerciseSolver
@@ -53,9 +55,11 @@ export function ExercisesScreen({
           exercise={selected}
           environment={environment}
           solved={solved.some((entry) => entry.exercise === selected.id)}
-          getCode={(language) => drafts[draftKey(language)] ?? selected.starters[language] ?? ""}
+          getCode={(language) =>
+            drafts.record[draftKey(selected.id, language)] ?? selected.starters[language] ?? ""
+          }
           setCode={(language, code) => {
-            setDrafts((previous) => ({ ...previous, [draftKey(language)]: code }));
+            drafts.set(selected.id, language, code);
           }}
           onBack={() => {
             navigate(() => {
@@ -87,7 +91,8 @@ export function ExercisesScreen({
   }
 
   const solvedIds = new Set(solved.map((entry) => entry.exercise));
-  const visible = filterExercises(catalog.exercises, solvedIds, criteria);
+  const started = inProgressIds(catalog.exercises, solvedIds, drafts.record);
+  const visible = filterExercises(catalog.exercises, solvedIds, criteria, started);
 
   return (
     <DepthTransition key="list">
@@ -106,6 +111,7 @@ export function ExercisesScreen({
           <ExerciseList
             exercises={visible}
             solved={solved}
+            inProgress={started}
             onOpen={(id) => {
               navigate(() => {
                 onSelect(id);

@@ -20,7 +20,7 @@ use crate::runner::RunOutput;
 use crate::sync;
 
 /// A solution this long is not a solution: it is a lookup table or something worse.
-const MAX_CODE_BYTES: usize = 20_000;
+pub(crate) const MAX_CODE_BYTES: usize = 20_000;
 
 /// Time allowed to run one test case.
 const CASE_TIMEOUT: Duration = Duration::from_secs(5);

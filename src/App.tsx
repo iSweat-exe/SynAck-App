@@ -20,7 +20,9 @@ import { OnboardingPage } from "./components/OnboardingPage";
 import { Sidebar, type SidebarItem } from "./components/Sidebar";
 import { useAuth } from "./auth/useAuth";
 import { useEnvironment } from "./environment/useEnvironment";
+import { useDrafts } from "./exercises/useDrafts";
 import { useExercises } from "./exercises/useExercises";
+import { useStreak } from "./exercises/useStreak";
 import { PROTOCOLS, findProtocol } from "./protocols/catalog";
 import { useValidatedProtocols } from "./protocols/useValidatedProtocols";
 import { useOnboarding } from "./onboarding/useOnboarding";
@@ -46,6 +48,7 @@ function Shell({ user, onSignOut }: ShellProps) {
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("appearance");
   const environment = useEnvironment();
   const exercises = useExercises();
+  const drafts = useDrafts();
   // The open exercise and protocol live here, not in their screens, for the breadcrumb.
   const [exerciseId, setExerciseId] = useState<string | null>(null);
   const [protocolId, setProtocolId] = useState<string | null>(null);
@@ -79,6 +82,7 @@ function Shell({ user, onSignOut }: ShellProps) {
     ...PROTOCOLS.filter((protocol) => validated.ids.has(protocol.id)),
   ].map((item) => item.difficulty);
   const validatedCount = PROTOCOLS.filter((protocol) => validated.ids.has(protocol.id)).length;
+  const streak = useStreak(exercises.solved.length + validated.ids.size);
 
   // The main navigation. Settings has its own button, above the account.
   const views: SidebarItem<MainViewId | "paths" | "courses">[] = [
@@ -146,6 +150,7 @@ function Shell({ user, onSignOut }: ShellProps) {
     page = (
       <ExercisesScreen
         exercises={exercises}
+        drafts={drafts}
         environment={environment}
         onReward={onReward}
         selectedId={exerciseId}
@@ -222,6 +227,7 @@ function Shell({ user, onSignOut }: ShellProps) {
           <NavbarActions
             xp={totalXp(finished)}
             coins={totalCoins(finished)}
+            streak={streak}
             gain={gain}
             updater={updater}
           />

@@ -1,13 +1,17 @@
 //! What the learner tells the app about themselves when they first sign in: their level, what they
 //! aim for, how much time they have. Nothing uses it yet; it is kept so that exercises, courses
-//! and paths can later be recommended to fit. It lives in the local database, one row per account.
+//! and paths can later be recommended to fit. It lives in the local database, one row per account, and in Supabase (see `sync.rs`).
+
+use std::time::Duration;
 
 use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
 
+use crate::auth::AuthService;
 use crate::error::AppError;
 use crate::progress::ProgressStore;
+use crate::sync;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -148,30 +152,47 @@ impl ProgressStore {
         self.lock().execute(
             "INSERT INTO onboarding (user_id, answers) VALUES (?1, ?2)
              ON CONFLICT(user_id) DO UPDATE SET answers = excluded.answers,
-                                                completed_at = datetime('now')",
+                                                completed_at = datetime('now'),
+                                                synced = 0",
             (user_id, json),
         )?;
         Ok(())
     }
 }
 
-/// The answers of an account, or nothing if it has not been through the questions yet.
+/// How long the first look for answers on the server may keep the questions waiting.
+const LOOKUP_TIMEOUT: Duration = Duration::from_secs(4);
+
+/// The answers of the signed-in account, or nothing if it has not been through the questions yet.
+/// On a computer that has never seen this account, the answers may already be on the server: it is
+/// asked first (briefly), so that nobody is asked the questions twice. The account comes from the
+/// sign-in service, never from the front end.
 #[tauri::command]
 pub async fn get_onboarding(
     store: State<'_, ProgressStore>,
-    user_id: String,
+    auth: State<'_, AuthService>,
 ) -> Result<Option<Onboarding>, AppError> {
+    let user_id = auth.user_id().await.ok_or(AppError::NotSignedIn)?;
+    if let Some(answers) = store.onboarding(&user_id)? {
+        return Ok(Some(answers));
+    }
+    // Offline or slow: the questions are shown, and what the server has arrives later.
+    let _ = tokio::time::timeout(LOOKUP_TIMEOUT, sync::sync(&store, &auth)).await;
     store.onboarding(&user_id)
 }
 
-/// Records the answers of an account.
+/// Records the answers of the signed-in account, then sends them to the server in the background.
 #[tauri::command]
 pub async fn save_onboarding(
+    app: AppHandle,
     store: State<'_, ProgressStore>,
-    user_id: String,
+    auth: State<'_, AuthService>,
     answers: Onboarding,
 ) -> Result<(), AppError> {
-    store.save_onboarding(&user_id, &answers)
+    let user_id = auth.user_id().await.ok_or(AppError::NotSignedIn)?;
+    store.save_onboarding(&user_id, &answers)?;
+    sync::spawn(app);
+    Ok(())
 }
 
 #[cfg(test)]

@@ -5,12 +5,20 @@ import { CheckIcon } from "./CheckIcon";
 interface ExerciseListProps {
   exercises: readonly Exercise[];
   solved: readonly SolvedEntry[];
+  /** The exercises started and not solved. */
+  inProgress: ReadonlySet<string>;
   onOpen: (id: string) => void;
   /** Shown when the filters leave nothing. */
   onReset: () => void;
 }
 
-export function ExerciseList({ exercises, solved, onOpen, onReset }: ExerciseListProps) {
+export function ExerciseList({
+  exercises,
+  solved,
+  inProgress,
+  onOpen,
+  onReset,
+}: ExerciseListProps) {
   if (exercises.length === 0) {
     return (
       <div className="empty card">
@@ -47,6 +55,9 @@ export function ExerciseList({ exercises, solved, onOpen, onReset }: ExerciseLis
                     <CheckIcon />
                     Résolu
                   </span>
+                )}
+                {!isSolved && inProgress.has(exercise.id) && (
+                  <span className="badge badge-warning">En cours</span>
                 )}
               </span>
             </button>

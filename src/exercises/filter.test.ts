@@ -94,6 +94,22 @@ describe("filterExercises", () => {
     ]);
   });
 
+  it("lists only the exercises started and not solved when the status is progress", () => {
+    const criteria = { ...NO_FILTER, status: "progress" as const };
+    const started = new Set(["fibonacci", "dict"]);
+    expect(ids(filterExercises(ALL, new Set(["dict"]), criteria, started))).toEqual(["fibonacci"]);
+  });
+
+  it("keeps the exercises in progress among those to do", () => {
+    const criteria = { ...NO_FILTER, status: "todo" as const };
+    const started = new Set(["fibonacci"]);
+    expect(ids(filterExercises(ALL, NONE_SOLVED, criteria, started))).toEqual([
+      "fibonacci",
+      "dict",
+      "fizzbuzz",
+    ]);
+  });
+
   it("returns nothing when no exercise matches", () => {
     const criteria = { ...NO_FILTER, query: "zzz" };
     expect(filterExercises(ALL, NONE_SOLVED, criteria)).toEqual([]);

@@ -9,11 +9,15 @@
 //! Experience, coins and levels are not stored: they are computed from the exercises solved and
 //! the protocols validated.
 
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::Duration;
+
+use rusqlite::OptionalExtension;
 use serde::Deserialize;
-use serde_json::json;
+use serde_json::{Value, json};
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::auth::AuthService;
+use crate::auth::{AuthService, Client};
 use crate::error::AppError;
 use crate::progress::ProgressStore;
 
@@ -34,6 +38,19 @@ struct RemoteSolved {
     exercise: String,
     language: String,
     solved_at: String,
+}
+
+#[derive(Deserialize)]
+struct RemoteOnboarding {
+    answers: Value,
+}
+
+#[derive(Deserialize)]
+struct RemoteDraft {
+    exercise: String,
+    language: String,
+    code: String,
+    updated_at: String,
 }
 
 #[derive(Deserialize)]
@@ -144,6 +161,111 @@ impl ProgressStore {
         }
         Ok(added)
     }
+
+    fn pending_onboarding(&self, user_id: &str) -> Result<Option<String>, AppError> {
+        let answers = self
+            .lock()
+            .query_row(
+                "SELECT answers FROM onboarding WHERE user_id = ?1 AND synced = 0",
+                [user_id],
+                |row| row.get(0),
+            )
+            .optional()?;
+        Ok(answers)
+    }
+
+    /// Marks the answers as sent, unless they changed while they were being sent.
+    fn mark_onboarding_synced(&self, user_id: &str, answers: &str) -> Result<(), AppError> {
+        self.lock().execute(
+            "UPDATE onboarding SET synced = 1 WHERE user_id = ?1 AND answers = ?2",
+            (user_id, answers),
+        )?;
+        Ok(())
+    }
+
+    /// Takes the answers of the server when this computer has none. Returns how many were added.
+    fn merge_onboarding(
+        &self,
+        user_id: &str,
+        remote: &[RemoteOnboarding],
+    ) -> Result<usize, AppError> {
+        let Some(row) = remote.first() else {
+            return Ok(0);
+        };
+        let added = self.lock().execute(
+            "INSERT OR IGNORE INTO onboarding (user_id, answers, synced) VALUES (?1, ?2, 1)",
+            (user_id, row.answers.to_string()),
+        )?;
+        Ok(added)
+    }
+
+    fn pending_drafts(&self, user_id: &str) -> Result<Vec<(String, String, String)>, AppError> {
+        let connection = self.lock();
+        let mut statement = connection.prepare(
+            "SELECT exercise, language, code FROM drafts
+             WHERE user_id = ?1 AND synced = 0
+             ORDER BY updated_at, exercise, language",
+        )?;
+        let rows = statement
+            .query_map([user_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    /// Marks a draft as sent, unless the learner went on typing while it was being sent.
+    fn mark_draft_synced(
+        &self,
+        user_id: &str,
+        exercise: &str,
+        language: &str,
+        code: &str,
+    ) -> Result<(), AppError> {
+        self.lock().execute(
+            "UPDATE drafts SET synced = 1
+             WHERE user_id = ?1 AND exercise = ?2 AND language = ?3 AND code = ?4",
+            (user_id, exercise, language, code),
+        )?;
+        Ok(())
+    }
+
+    /// Takes the drafts of the server that are newer than this computer's, but never replaces code
+    /// that was not sent yet. Returns how many drafts changed here.
+    fn merge_drafts(&self, user_id: &str, remote: &[RemoteDraft]) -> Result<usize, AppError> {
+        let connection = self.lock();
+        let mut changed = 0;
+        for row in remote {
+            changed += connection.execute(
+                "INSERT INTO drafts (user_id, exercise, language, code, updated_at, synced)
+                 VALUES (?1, ?2, ?3, ?4, ?5, 1)
+                 ON CONFLICT(user_id, exercise, language) DO UPDATE SET
+                    code = excluded.code, updated_at = excluded.updated_at, synced = 1
+                 WHERE drafts.synced = 1 AND excluded.updated_at > drafts.updated_at",
+                (
+                    user_id,
+                    &row.exercise,
+                    &row.language,
+                    &row.code,
+                    local_time(&row.updated_at),
+                ),
+            )?;
+        }
+        Ok(changed)
+    }
+}
+
+/// Sends one row. `Ok(true)` when the server took it, `Ok(false)` when it refused it for good.
+async fn send(
+    client: &Client,
+    token: &str,
+    function: &str,
+    arguments: &Value,
+) -> Result<bool, AppError> {
+    match client.rpc(token, function, arguments).await {
+        Ok(()) => Ok(true),
+        // The server judged this row invalid: it stays here, and it must not block the others.
+        Err(AppError::SyncRejected) => Ok(false),
+        Err(error) => Err(error),
+    }
 }
 
 /// Sends what the server does not have yet, then brings back what this computer does not have.
@@ -169,31 +291,31 @@ pub async fn sync(store: &ProgressStore, auth: &AuthService) -> Result<SyncRepor
 
     for (exercise, language) in store.pending_solved(user)? {
         let arguments = json!({ "p_exercise": exercise, "p_language": language });
-        match client
-            .rpc(token, "record_solved_exercise", &arguments)
-            .await
-        {
-            Ok(()) => {
-                store.mark_solved_synced(user, &exercise, &language)?;
-                report.pushed += 1;
-            }
-            // The server judged this row invalid: it stays here, and it must not block the others.
-            Err(AppError::SyncRejected) => {}
-            Err(error) => return Err(error),
+        if send(client, token, "record_solved_exercise", &arguments).await? {
+            store.mark_solved_synced(user, &exercise, &language)?;
+            report.pushed += 1;
         }
     }
     for protocol in store.pending_protocols(user)? {
         let arguments = json!({ "p_protocol": protocol });
-        match client
-            .rpc(token, "record_validated_protocol", &arguments)
-            .await
-        {
-            Ok(()) => {
-                store.mark_protocol_synced(user, &protocol)?;
-                report.pushed += 1;
-            }
-            Err(AppError::SyncRejected) => {}
-            Err(error) => return Err(error),
+        if send(client, token, "record_validated_protocol", &arguments).await? {
+            store.mark_protocol_synced(user, &protocol)?;
+            report.pushed += 1;
+        }
+    }
+    if let Some(answers) = store.pending_onboarding(user)? {
+        let parsed: Value = serde_json::from_str(&answers)?;
+        let arguments = json!({ "p_answers": parsed });
+        if send(client, token, "save_onboarding", &arguments).await? {
+            store.mark_onboarding_synced(user, &answers)?;
+            report.pushed += 1;
+        }
+    }
+    for (exercise, language, code) in store.pending_drafts(user)? {
+        let arguments = json!({ "p_exercise": exercise, "p_language": language, "p_code": code });
+        if send(client, token, "save_draft", &arguments).await? {
+            store.mark_draft_synced(user, &exercise, &language, &code)?;
+            report.pushed += 1;
         }
     }
 
@@ -203,7 +325,14 @@ pub async fn sync(store: &ProgressStore, auth: &AuthService) -> Result<SyncRepor
     let protocols: Vec<RemoteProtocol> = client
         .select(token, "validated_protocols", "protocol,validated_at")
         .await?;
-    report.pulled = store.merge_solved(user, &solved)? + store.merge_protocols(user, &protocols)?;
+    let onboarding: Vec<RemoteOnboarding> = client.select(token, "onboarding", "answers").await?;
+    let drafts: Vec<RemoteDraft> = client
+        .select(token, "drafts", "exercise,language,code,updated_at")
+        .await?;
+    report.pulled = store.merge_solved(user, &solved)?
+        + store.merge_protocols(user, &protocols)?
+        + store.merge_onboarding(user, &onboarding)?
+        + store.merge_drafts(user, &drafts)?;
     Ok(report)
 }
 
@@ -211,12 +340,34 @@ pub async fn sync(store: &ProgressStore, auth: &AuthService) -> Result<SyncRepor
 /// learner: the progress is safe here and goes next time.
 pub fn spawn(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
-        let store = app.state::<ProgressStore>();
-        let auth = app.state::<AuthService>();
-        if let Ok(report) = sync(&store, &auth).await
-            && report.pulled > 0
-        {
-            let _ = app.emit(PROGRESS_CHANGED, ());
+        run(&app).await;
+    });
+}
+
+async fn run(app: &AppHandle) {
+    let store = app.state::<ProgressStore>();
+    let auth = app.state::<AuthService>();
+    if let Ok(report) = sync(&store, &auth).await
+        && report.pulled > 0
+    {
+        let _ = app.emit(PROGRESS_CHANGED, ());
+    }
+}
+
+/// How long the learner must stop typing before a draft is sent.
+const EDIT_QUIET_PERIOD: Duration = Duration::from_secs(20);
+
+/// Counts the edits, so that only the last one of a burst sends anything.
+static EDITS: AtomicU64 = AtomicU64::new(0);
+
+/// Synchronizes once the learner has stopped typing for a while: each edit postpones the
+/// synchronization, so typing never makes a request per keystroke.
+pub fn spawn_after_edit(app: AppHandle) {
+    let edit = EDITS.fetch_add(1, Ordering::SeqCst) + 1;
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(EDIT_QUIET_PERIOD).await;
+        if EDITS.load(Ordering::SeqCst) == edit {
+            run(&app).await;
         }
     });
 }
@@ -255,9 +406,32 @@ mod tests {
         move |request| match request.path() {
             "/auth/v1/token" => (200, session_body()),
             "/rest/v1/solved_exercises" => (200, remote_solved.to_string()),
-            "/rest/v1/validated_protocols" => (200, "[]".to_owned()),
+            "/rest/v1/validated_protocols" | "/rest/v1/onboarding" | "/rest/v1/drafts" => {
+                (200, "[]".to_owned())
+            }
             path if path.starts_with("/rest/v1/rpc/") => (rpc_status, String::new()),
             _ => (404, "{}".to_owned()),
+        }
+    }
+
+    /// Like [`supabase`], with an onboarding and drafts already on the server.
+    fn supabase_with(onboarding: Value, drafts: Value) -> impl Fn(&Recorded) -> (u16, String) {
+        move |request| match request.path() {
+            "/rest/v1/onboarding" => (200, onboarding.to_string()),
+            "/rest/v1/drafts" => (200, drafts.to_string()),
+            _ => supabase(json!([]), 204)(request),
+        }
+    }
+
+    fn answers() -> crate::onboarding::Onboarding {
+        use crate::onboarding::{Goal, Level, Motivation, Onboarding, Style, WeeklyTime};
+        Onboarding {
+            level: Level::Beginner,
+            goals: vec![Goal::Web],
+            known_languages: vec![],
+            motivation: Motivation::Career,
+            weekly_time: WeeklyTime::OneToThree,
+            styles: vec![Style::Practice],
         }
     }
 
@@ -470,5 +644,135 @@ mod tests {
                 .len(),
             2
         );
+    }
+
+    #[tokio::test]
+    async fn sync_should_send_the_onboarding_answers_that_were_not_sent() {
+        let mock = Mock::start(supabase(json!([]), 204)).await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+        store.save_onboarding(USER, &answers()).unwrap();
+
+        sync(&store, &auth).await.unwrap();
+
+        let calls = mock.requests_to("/rest/v1/rpc/save_onboarding");
+        assert_eq!(calls[0].json()["p_answers"]["level"], "beginner");
+    }
+
+    #[tokio::test]
+    async fn sync_should_send_the_onboarding_answers_only_once() {
+        let mock = Mock::start(supabase(json!([]), 204)).await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+        store.save_onboarding(USER, &answers()).unwrap();
+
+        sync(&store, &auth).await.unwrap();
+        sync(&store, &auth).await.unwrap();
+
+        assert_eq!(mock.requests_to("/rest/v1/rpc/save_onboarding").len(), 1);
+    }
+
+    #[tokio::test]
+    async fn sync_should_bring_the_onboarding_answers_when_this_computer_has_none() {
+        let remote = json!([{ "answers": serde_json::to_value(answers()).unwrap() }]);
+        let mock = Mock::start(supabase_with(remote, json!([]))).await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+
+        sync(&store, &auth).await.unwrap();
+
+        assert_eq!(store.onboarding(USER).unwrap(), Some(answers()));
+    }
+
+    #[tokio::test]
+    async fn sync_should_keep_the_onboarding_answers_of_this_computer_when_the_server_has_others() {
+        let other = crate::onboarding::Onboarding {
+            level: crate::onboarding::Level::Advanced,
+            ..answers()
+        };
+        let remote = json!([{ "answers": serde_json::to_value(other).unwrap() }]);
+        let mock = Mock::start(supabase_with(remote, json!([]))).await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+        store.save_onboarding(USER, &answers()).unwrap();
+
+        sync(&store, &auth).await.unwrap();
+
+        assert_eq!(store.onboarding(USER).unwrap(), Some(answers()));
+    }
+
+    #[tokio::test]
+    async fn sync_should_send_the_drafts_that_were_not_sent() {
+        let mock = Mock::start(supabase(json!([]), 204)).await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+        store
+            .save_draft(USER, "fizzbuzz", "python", "print(1)")
+            .unwrap();
+
+        sync(&store, &auth).await.unwrap();
+
+        let calls = mock.requests_to("/rest/v1/rpc/save_draft");
+        assert_eq!(
+            calls[0].json(),
+            json!({ "p_exercise": "fizzbuzz", "p_language": "python", "p_code": "print(1)" })
+        );
+    }
+
+    #[tokio::test]
+    async fn sync_should_keep_a_draft_to_send_later_when_the_server_is_down() {
+        let mock = Mock::start(supabase(json!([]), 503)).await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+        store
+            .save_draft(USER, "fizzbuzz", "python", "print(1)")
+            .unwrap();
+
+        let _ = sync(&store, &auth).await;
+
+        assert_eq!(store.pending_drafts(USER).unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn sync_should_bring_a_draft_written_on_another_computer() {
+        let remote = json!([{
+            "exercise": "fizzbuzz",
+            "language": "python",
+            "code": "print('from afar')",
+            "updated_at": "2026-10-26T10:00:00+00:00"
+        }]);
+        let mock = Mock::start(supabase_with(json!([]), remote)).await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+
+        sync(&store, &auth).await.unwrap();
+
+        assert_eq!(store.drafts(USER).unwrap()[0].code, "print('from afar')");
+    }
+
+    #[tokio::test]
+    async fn sync_should_never_replace_code_that_was_not_sent_yet_with_a_draft_from_the_server() {
+        // The server is down for the push, so the local draft stays "not sent"...
+        let remote = json!([{
+            "exercise": "fizzbuzz",
+            "language": "python",
+            "code": "print('from afar')",
+            "updated_at": "2999-01-01T00:00:00+00:00"
+        }]);
+        let mock = Mock::start(move |request: &Recorded| match request.path() {
+            "/rest/v1/rpc/save_draft" => (400, String::new()),
+            _ => supabase_with(json!([]), remote.clone())(request),
+        })
+        .await;
+        let auth = signed_in(&mock.url).await;
+        let (_dir, store) = store();
+        store
+            .save_draft(USER, "fizzbuzz", "python", "print('mine')")
+            .unwrap();
+
+        sync(&store, &auth).await.unwrap();
+
+        // ...and what the learner wrote is what they get, even if the server's copy is newer.
+        assert_eq!(store.drafts(USER).unwrap()[0].code, "print('mine')");
     }
 }

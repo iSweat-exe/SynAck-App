@@ -15,7 +15,7 @@ use crate::error::AppError;
 
 /// Schema version stored in `PRAGMA user_version`. Add a step to `migrate` and bump this
 /// whenever the schema changes; never edit a step that has already shipped.
-const SCHEMA_VERSION: i32 = 5;
+const SCHEMA_VERSION: i32 = 6;
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,6 +90,22 @@ fn migrate(connection: &Connection) -> Result<(), AppError> {
              DROP TABLE validated_protocols;
              ALTER TABLE validated_protocols_v5 RENAME TO validated_protocols;
              COMMIT;",
+        )?;
+    }
+    // Version 6: the onboarding answers know whether Supabase has them, and the code of exercises
+    // in progress is kept (see `drafts.rs`).
+    if version < 6 {
+        connection.execute_batch(
+            "ALTER TABLE onboarding ADD COLUMN synced INTEGER NOT NULL DEFAULT 0;
+             CREATE TABLE IF NOT EXISTS drafts (
+                user_id TEXT NOT NULL,
+                exercise TEXT NOT NULL,
+                language TEXT NOT NULL,
+                code TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                synced INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (user_id, exercise, language)
+             );",
         )?;
     }
     connection.pragma_update(None, "user_version", SCHEMA_VERSION)?;
@@ -349,6 +365,8 @@ mod tests {
                 solved_at TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (exercise, language));
              CREATE TABLE validated_protocols (protocol TEXT NOT NULL PRIMARY KEY,
                 validated_at TEXT NOT NULL DEFAULT (datetime('now')));
+             CREATE TABLE onboarding (user_id TEXT NOT NULL PRIMARY KEY, answers TEXT NOT NULL,
+                completed_at TEXT NOT NULL DEFAULT (datetime('now')));
              INSERT INTO solved (exercise, language) VALUES ('tips', 'python');
              INSERT INTO validated_protocols (protocol) VALUES ('tcp');
              PRAGMA user_version = 4;",

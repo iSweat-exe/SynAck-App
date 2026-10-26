@@ -1557,6 +1557,15 @@ h3.label.callout-label,
   padding: 0 0.75rem;
 }
 
+/* It is shown, not pressed: no hover colour, and a lit flame while the streak is alive. */
+span.navbar-streak:hover {
+  background: var(--surface);
+}
+
+.navbar-streak[data-active="true"] .icon {
+  color: var(--warning-fg);
+}
+
 .icon-button {
   justify-content: center;
   width: 2.5rem;

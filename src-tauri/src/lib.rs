@@ -1,6 +1,7 @@
 mod auth;
 mod cases;
 mod check;
+mod drafts;
 mod error;
 mod execute;
 mod exercises;
@@ -10,6 +11,7 @@ mod path;
 mod progress;
 mod protocols;
 mod runner;
+mod streak;
 mod sync;
 
 use tauri::Manager;
@@ -63,6 +65,8 @@ pub fn run() {
             auth::sign_in,
             auth::sign_out,
             check::check_exercise,
+            drafts::get_drafts,
+            drafts::save_draft,
             exercises::list_exercises,
             languages::check_environment,
             onboarding::get_onboarding,
@@ -70,7 +74,8 @@ pub fn run() {
             progress::get_solved,
             progress::get_validated_protocols,
             protocols::start_protocol_quiz,
-            protocols::submit_protocol_quiz
+            protocols::submit_protocol_quiz,
+            streak::get_streak
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

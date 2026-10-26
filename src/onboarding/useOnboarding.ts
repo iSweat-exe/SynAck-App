@@ -19,7 +19,7 @@ export function useOnboarding(userId: string): UseOnboarding {
 
   useEffect(() => {
     let cancelled = false;
-    getOnboarding(userId)
+    getOnboarding()
       .then((answers) => {
         if (!cancelled) setState({ status: answers === null ? "needed" : "done" });
       })
@@ -31,13 +31,10 @@ export function useOnboarding(userId: string): UseOnboarding {
     };
   }, [userId]);
 
-  const save = useCallback(
-    async (profile: Onboarding) => {
-      await saveOnboarding(userId, profile);
-      setState({ status: "done" });
-    },
-    [userId],
-  );
+  const save = useCallback(async (profile: Onboarding) => {
+    await saveOnboarding(profile);
+    setState({ status: "done" });
+  }, []);
 
   return { state, save };
 }

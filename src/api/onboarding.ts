@@ -39,12 +39,12 @@ export interface Onboarding {
   styles: Style[];
 }
 
-/** The answers of this account, or `null` if it has not been through the questions yet. */
-export function getOnboarding(userId: string): Promise<Onboarding | null> {
-  return call<Onboarding | null>("get_onboarding", { userId });
+/** The answers of the signed-in account, or `null` if it has not been through the questions yet. */
+export function getOnboarding(): Promise<Onboarding | null> {
+  return call<Onboarding | null>("get_onboarding");
 }
 
-export async function saveOnboarding(userId: string, answers: Onboarding): Promise<void> {
+export async function saveOnboarding(answers: Onboarding): Promise<void> {
   // The Rust command returns `()`, which arrives as `null`.
-  await call<null>("save_onboarding", { userId, answers });
+  await call<null>("save_onboarding", { answers });
 }

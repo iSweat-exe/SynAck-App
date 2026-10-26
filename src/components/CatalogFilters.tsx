@@ -59,6 +59,8 @@ export interface FilterCopy {
   many: string;
   todo: string;
   done: string;
+  /** The label of the "started, not finished" status; absent when the catalog has no such thing. */
+  progress?: string;
 }
 
 export const EXERCISE_COPY: FilterCopy = {
@@ -67,6 +69,7 @@ export const EXERCISE_COPY: FilterCopy = {
   many: "exercices",
   todo: "À faire",
   done: "Résolus",
+  progress: "En cours",
 };
 
 export const PROTOCOL_COPY: FilterCopy = {
@@ -81,6 +84,7 @@ function statuses(copy: FilterCopy): readonly ChipOption<Status>[] {
   return [
     { value: "all", label: "Tous" },
     { value: "todo", label: copy.todo },
+    ...(copy.progress === undefined ? [] : [{ value: "progress" as const, label: copy.progress }]),
     { value: "solved", label: copy.done },
   ];
 }
