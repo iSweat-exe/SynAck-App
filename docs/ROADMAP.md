@@ -32,6 +32,7 @@ Règle : **une seule feature « EN COURS » à la fois.** On n'ouvre la suivante
 - [x] **Progression synchronisée avec Supabase, liée au compte** : exercices résolus et protocoles validés dans le projet Supabase (tables en lecture seule, écriture par fonctions, RLS, tests pgTAP), copie locale par compte, envoi en arrière-plan avec reprise hors ligne, renouvellement du jeton d'accès. XP et pièces s'en déduisent.
 - [x] **Reste de la synchronisation** : réponses de l'onboarding, brouillons (statut « En cours » sur les exercices, filtre) et série de jours (réelle dans la navbar) dans Supabase, par compte.
 - [x] **Statistiques côté serveur** : XP, pièces, niveau et séries calculés par Supabase (catalogue des difficultés, triggers, table `player_stats`, vue `my_stats`), avec tests pgTAP et tests de cohérence du catalogue.
+- [x] **Exercices difficiles, indices et corrigé** : 5 exercices difficiles (distance d'édition, sac à dos, plus court chemin, ordre des tâches, plus longue sous-suite croissante), 3 indices progressifs par exercice, corrigé commenté débloqué après réussite.
 
 ## EN COURS
 
@@ -39,7 +40,7 @@ _Aucune. À choisir par le porteur._
 
 ## À venir (proposition, dans l'ordre)
 
-- [ ] **Plus d'exercices** : en ajouter (voir « Ajouter un exercice » dans `CLAUDE.md`), des plus faciles aux plus difficiles.
+- [ ] **Plus d'exercices** : en ajouter (voir « Ajouter un exercice » dans `CLAUDE.md`), pour que chaque thème ait une rampe de facile à difficile.
 - [ ] **Autres langages dans les exercices** : Go, Rust, puis C et C++ (le moteur sait déjà les exécuter).
 - [ ] **Désactiver le fournisseur e-mail** du projet Supabase si l'appli reste OAuth uniquement (réglage du tableau de bord).
 

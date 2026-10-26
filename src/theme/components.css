@@ -2392,7 +2392,8 @@ body:has(.shop[open]) {
 
 /* Hints: asked for one at a time, never all at once. */
 
-.hints {
+.hints,
+.solution {
   display: grid;
   gap: 0.75rem;
 }

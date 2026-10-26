@@ -8,6 +8,7 @@ import { CheckIcon } from "./CheckIcon";
 import { NavIcon } from "./NavIcon";
 import { CheckResults } from "./CheckResults";
 import { ExerciseHints } from "./ExerciseHints";
+import { ExerciseSolution } from "./ExerciseSolution";
 import { ExerciseStatement } from "./ExerciseStatement";
 import { SolvedFeedback } from "./SolvedFeedback";
 import { rewardOf, type Reward } from "../xp";
@@ -270,6 +271,15 @@ export function ExerciseSolver({
             )}
             {check.status === "done" && <CheckResults report={check.report} mode={check.mode} />}
           </div>
+
+          {(solved || justSolved) && (
+            <ExerciseSolution
+              key={language}
+              exerciseId={exercise.id}
+              language={language}
+              languageName={name}
+            />
+          )}
         </div>
       </div>
     </section>

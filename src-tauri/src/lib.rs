@@ -11,6 +11,7 @@ mod path;
 mod progress;
 mod protocols;
 mod runner;
+mod solutions;
 mod streak;
 mod sync;
 
@@ -75,6 +76,7 @@ pub fn run() {
             progress::get_validated_protocols,
             protocols::start_protocol_quiz,
             protocols::submit_protocol_quiz,
+            solutions::get_solution,
             streak::get_streak
         ])
         .run(tauri::generate_context!())

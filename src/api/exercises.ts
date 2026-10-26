@@ -97,6 +97,20 @@ export function listExercises(): Promise<Exercise[]> {
   return call<Exercise[]>("list_exercises");
 }
 
+/** Mirrors `Solution` in `src-tauri/src/solutions.rs`. */
+export interface Solution {
+  language: string;
+  /** The reference solution, in this language. */
+  code: string;
+  /** The idea behind it and its pitfalls. Markdown. */
+  explanation: string;
+}
+
+/** The walkthrough of an exercise. The Rust side refuses it until the exercise is solved. */
+export function getSolution(exercise: string, language: string): Promise<Solution> {
+  return call<Solution>("get_solution", { exercise, language });
+}
+
 export function getSolved(): Promise<SolvedEntry[]> {
   return call<SolvedEntry[]>("get_solved");
 }

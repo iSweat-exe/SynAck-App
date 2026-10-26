@@ -59,7 +59,7 @@ src/            Interface React. Aucune logique système ici.
 src-tauri/      Cœur Rust : tout ce qui touche au système (processus, fichiers, détection d'outils).
   languages.json  Les langages DÉCRITS PAR DES DONNÉES (détection, guide d'installation par OS, commandes de compilation/exécution).
   protocols/<id>.json  La banque de questions d'un protocole (JAMAIS envoyée au front) : par sujet, des affirmations vraies et fausses, plus des séquences à remettre en ordre.
-  exercises/<id>/ exercise.json (énoncé, exemples visibles, codes de départ), solution.py et solution.js (corrigés, JAMAIS dans le binaire).
+  exercises/<id>/ exercise.json (énoncé, exemples visibles, 3 indices, codes de départ), solution.py et solution.js (corrigés), explanation.md (l'explication du corrigé).
   src/lib.rs      Point d'entrée Tauri (commandes déclarées ici).
   src/runner.rs   Exécution d'un processus surveillé (timeout, stdin, sortie plafonnée à 1 Mo/flux, sans fenêtre console).
   src/languages.rs  Charge `languages.json`, détecte les outils, commande `check_environment`.
@@ -95,7 +95,7 @@ Principes :
 
 Le but est que l'élève **fasse réellement la logique demandée** et ne puisse pas « sauter » l'exercice. Les garde-fous, tous testés dans `check.rs` :
 
-- **Les tests cachés ne quittent jamais le Rust.** Le front reçoit seulement l'énoncé, les exemples visibles et le code de départ (`list_exercises`). Les corrigés (`solution.*`) ne sont pas dans le binaire (lus seulement par les tests).
+- **Les tests cachés ne quittent jamais le Rust.** Le front reçoit seulement l'énoncé, les exemples visibles et le code de départ (`list_exercises`). Les tests, leurs générateurs et l'oracle ne sont jamais envoyés. **Les corrigés et leur explication sont dans le binaire** (`solutions.rs`, `include_str!`) mais **le Rust ne les donne qu'à un compte qui a résolu l'exercice** (`get_solution`, refus `SolutionLocked` sinon) : cela protège le parcours d'apprentissage depuis l'interface, pas contre quelqu'un qui lirait le binaire (décision du porteur : l'élève doit pouvoir comparer sa méthode au corrigé après réussite).
 - **Les tests cachés sont tirés au hasard à chaque validation** (`cases.rs`, crate `fastrand`) : quelques cas limites fixes + des cas aléatoires, avec la solution de référence qui calcule la sortie attendue. Coder les réponses en dur (même celles des exemples) échoue : le test `submit_should_not_solve_the_exercise_when_answers_are_hard_coded` le prouve pour chaque exercice.
 - **Les énoncés contiennent de vrais pièges de logique** (clé répétée dans un dictionnaire, liste vide, bornes…), et les générateurs les exercent.
 - **Deux modes** : « Tester les exemples » (rien n'est enregistré) et « Valider » (exemples puis tests cachés ; seul moyen de résoudre). Si un exemple échoue, les tests cachés ne sont pas lancés.
@@ -104,10 +104,10 @@ Le but est que l'élève **fasse réellement la logique demandée** et ne puisse
 
 **Ajouter un exercice** (sans code front) :
 
-1. `src-tauri/exercises/<id>/exercise.json` : `id`, `title`, `difficulty` (`easy`/`medium`/`hard`), `summary`, `topics` (thèmes filtrables, ex. `Boucles` ; en réutiliser plutôt qu'en inventer), `statement` (de quoi il s'agit), `input` et `output` (formats, Markdown court), `notes` (optionnel : pièges et indices, affichés dans l'encadré « À savoir »), `examples` (`input`/`output`), `starters` (un code de départ par langage proposé, qui lit déjà l'entrée standard et ne résout rien).
-2. `solution.py` et `solution.js` dans le même dossier.
+1. `src-tauri/exercises/<id>/exercise.json` : `id`, `title`, `difficulty` (`easy`/`medium`/`hard`), `summary`, `topics` (thèmes filtrables, ex. `Boucles` ; en réutiliser plutôt qu'en inventer), `statement` (de quoi il s'agit), `input` et `output` (formats, Markdown court), `notes` (optionnel : pièges et indices, affichés dans l'encadré « À savoir »), `examples` (`input`/`output`), `hints` (**exactement 3 indices**, du plus léger au plus précis : une piste, la technique, le plan sans code ; l'interface les montre un par un, testé), `starters` (un code de départ par langage proposé, qui lit déjà l'entrée standard et ne résout rien).
+2. `solution.py`, `solution.js` et `explanation.md` (l'idée, la complexité, les pièges, Markdown court) dans le même dossier, puis une ligne `walkthrough!("<id>")` dans `solutions.rs` (et au compteur du tableau).
 3. Dans `exercises.rs` : l'ajouter à `SOURCES` (et au compteur du tableau). Dans `cases.rs` : une entrée de `SPECS` avec `inputs` (cas limites fixes + aléatoires, exerçant les pièges) et `solve` (l'oracle). Préférer un format de sortie sans ambiguïté entre langages (entiers, texte) ; pour des décimales, calculer en entiers (voir `tips_solve`).
-4. Il y a 15 exercices : penser aux **formats sans ambiguïté** entre langages (entiers, mots ; jamais de décimales à arrondir sauf calcul en entiers) et aux **cas limites** qui piègent (liste vide, tous négatifs, `0`, majuscules, ordre à conserver) : les générateurs de `cases.rs` doivent les exercer.
+4. Il y a 20 exercices (15 faciles ou moyens, 5 difficiles : programmation dynamique et graphes) : penser aux **formats sans ambiguïté** entre langages (entiers, mots ; jamais de décimales à arrondir sauf calcul en entiers) et aux **cas limites** qui piègent (liste vide, tous négatifs, `0`, majuscules, ordre à conserver) : les générateurs de `cases.rs` doivent les exercer.
 5. **Une nouvelle migration Supabase** (`supabase migration new`) qui ajoute la ligne `('exercise', '<id>', '<difficulté>')` à `catalog_items` : sans elle, le serveur ne compte aucune XP ni aucune pièce pour cet exercice. Un test Rust (`exercises.rs`) fait échouer `npm run check` si elle manque. (Si la difficulté d'un exercice change plus tard, une migration met aussi la ligne à jour.)
 6. `npm run check` : les tests de cohérence, de corrigés et de triche se lancent seuls.
 
