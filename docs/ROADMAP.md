@@ -35,6 +35,7 @@ Règle : **une seule feature « EN COURS » à la fois.** On n'ouvre la suivante
 - [x] **Exercices difficiles, indices et corrigé** : 5 exercices difficiles (distance d'édition, sac à dos, plus court chemin, ordre des tâches, plus longue sous-suite croissante), 3 indices progressifs par exercice, corrigé commenté débloqué après réussite.
 - [x] **Recommandations d'exercices** d'après l'onboarding (niveau, centres d'intérêt, langages connus, exercices commencés), et réponses modifiables depuis le Profil.
 - [x] **Recherche globale (Ctrl K)** : exercices, protocoles et pages, au clavier.
+- [x] **Tests de l'interface dans un navigateur** (Playwright, faux backend Tauri, 24 scénarios : connexion et questions, exercices, indices, brouillons, corrigé, série, recherche, profil, thème), dans la CI.
 
 ## EN COURS
 

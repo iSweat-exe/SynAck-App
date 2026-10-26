@@ -34,3 +34,7 @@ supabase/.temp
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright
+e2e-results
+playwright-report
