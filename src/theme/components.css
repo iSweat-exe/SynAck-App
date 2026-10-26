@@ -2444,3 +2444,105 @@ body:has(.shop[open]) {
   padding: 0;
   border: 0;
 }
+
+/* The search (Ctrl K): a window near the top, over a dimmed application. */
+
+.palette {
+  position: fixed;
+  top: 12vh;
+  width: min(40rem, calc(100vw - 3rem));
+  max-width: none;
+  max-height: 70vh;
+  margin: 0 auto;
+  padding: 0.75rem;
+  overflow: hidden;
+  border: var(--u) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 8px 8px 0 var(--shadow);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 0.18s;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  transition-behavior: allow-discrete;
+}
+
+.palette[open] {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-rows: auto minmax(0, 1fr);
+  opacity: 1;
+  transform: none;
+}
+
+@starting-style {
+  .palette[open] {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.palette::backdrop {
+  background: rgb(20 16 26 / 0.5);
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .palette::backdrop {
+    background: rgb(20 16 26 / 0.92);
+  }
+}
+
+.palette-input {
+  width: 100%;
+}
+
+.palette-results {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.palette-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.75rem;
+  border: var(--u) solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.palette-result[aria-selected="true"] {
+  border-color: var(--outline);
+  background: var(--secondary-bg);
+}
+
+.palette-result-text {
+  display: grid;
+  min-width: 0;
+}
+
+.palette-result-title {
+  font-weight: 700;
+}
+
+.palette-result-detail {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-empty {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  color: var(--muted);
+}

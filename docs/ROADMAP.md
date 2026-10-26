@@ -34,6 +34,7 @@ Règle : **une seule feature « EN COURS » à la fois.** On n'ouvre la suivante
 - [x] **Statistiques côté serveur** : XP, pièces, niveau et séries calculés par Supabase (catalogue des difficultés, triggers, table `player_stats`, vue `my_stats`), avec tests pgTAP et tests de cohérence du catalogue.
 - [x] **Exercices difficiles, indices et corrigé** : 5 exercices difficiles (distance d'édition, sac à dos, plus court chemin, ordre des tâches, plus longue sous-suite croissante), 3 indices progressifs par exercice, corrigé commenté débloqué après réussite.
 - [x] **Recommandations d'exercices** d'après l'onboarding (niveau, centres d'intérêt, langages connus, exercices commencés), et réponses modifiables depuis le Profil.
+- [x] **Recherche globale (Ctrl K)** : exercices, protocoles et pages, au clavier.
 
 ## EN COURS
 
@@ -51,5 +52,5 @@ _Aucune. À choisir par le porteur._
 
 - Publication : certificat de signature de code Windows et notarisation Apple (plus d'avertissement à la première installation), canal « bêta » qui reçoit aussi les pré-versions.
 - Boutique : rendre les achats possibles (table de dépenses côté Rust, solde = gagné moins dépensé), puis les bonus et thèmes eux-mêmes. La fenêtre et le catalogue existent déjà, rien ne s'achète.
-- Navbar, en haut à droite (maquettes grisées déjà posées, seul le bouton de thème marche) : recherche globale (Ctrl K), pièces (monnaie gagnée en résolvant, dépensée dans les bonus), bonus (menu qui regroupe ceux que le joueur gagne : double XP, gel de série...), notifications. Sidebar : sections Cours et Administration. Autres idées : objectif du jour, aide et raccourcis clavier, bouton « Continuer » vers le prochain exercice non résolu.
+- Navbar, en haut à droite (maquettes grisées déjà posées, seul le bouton de thème marche) : pièces (monnaie gagnée en résolvant, dépensée dans les bonus), bonus (menu qui regroupe ceux que le joueur gagne : double XP, gel de série...), notifications. Sidebar : sections Cours et Administration. Autres idées : objectif du jour, aide et raccourcis clavier, bouton « Continuer » vers le prochain exercice non résolu.
 - Cours et parcours d'apprentissage, indices progressifs, révision espacée SM-2, badges, séries, classement, protocoles en plus (WebSocket, SMTP, FTP, QUIC...), quiz sur les protocoles.

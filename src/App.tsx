@@ -1,7 +1,8 @@
-import { useState, ViewTransition, type ReactNode } from "react";
+import { useEffect, useState, ViewTransition, type ReactNode } from "react";
 import { MotionConfig } from "motion/react";
 import type { AuthUser } from "./api/auth";
 import { AccountCard } from "./components/AccountCard";
+import { CommandPalette } from "./components/CommandPalette";
 import { ExercisesScreen } from "./components/ExercisesScreen";
 import { LoginPage } from "./components/LoginPage";
 import { Breadcrumb, type Crumb } from "./components/Breadcrumb";
@@ -28,6 +29,7 @@ import { PROTOCOLS, findProtocol } from "./protocols/catalog";
 import { useValidatedProtocols } from "./protocols/useValidatedProtocols";
 import { useOnboarding } from "./onboarding/useOnboarding";
 import { useUpdater } from "./updates/useUpdater";
+import type { SearchTarget } from "./search/search";
 import { navigate } from "./transitions";
 import { totalCoins, totalXp, type Gain, type Reward } from "./xp";
 
@@ -64,8 +66,41 @@ function Shell({ user, profile, onSaveProfile, onSignOut }: ShellProps) {
   // The reward just earned. It is set before the progress is read again, so that the navbar knows a
   // celebration is coming when the new totals arrive.
   const [gain, setGain] = useState<Gain | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Ctrl K (Cmd K on a Mac) opens the search, or closes it when it is already open.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
   const onReward = (reward: Reward) => {
     setGain((previous) => ({ id: (previous?.id ?? 0) + 1, ...reward }));
+  };
+
+  // A result of the search: an exercise or a protocol slides in, a page is reached sideways.
+  const openFromSearch = (target: SearchTarget) => {
+    setSearchOpen(false);
+    navigate(
+      () => {
+        setExerciseId(target.type === "exercise" ? target.id : null);
+        setProtocolId(target.type === "protocol" ? target.id : null);
+        if (target.type === "exercise") setView("exercises");
+        else if (target.type === "protocol") setView("protocols");
+        else {
+          setView(target.view);
+          if (target.section !== undefined) setSettingsSection(target.section);
+        }
+      },
+      target.type === "page" ? undefined : "nav-forward",
+    );
   };
 
   // Moving between sections is lateral: a short fade, no slide, which would imply a direction.
@@ -241,6 +276,9 @@ function Shell({ user, profile, onSaveProfile, onSignOut }: ShellProps) {
             xp={totalXp(finished)}
             coins={totalCoins(finished)}
             streak={streak}
+            onOpenSearch={() => {
+              setSearchOpen(true);
+            }}
             gain={gain}
             updater={updater}
           />
@@ -251,6 +289,14 @@ function Shell({ user, profile, onSaveProfile, onSignOut }: ShellProps) {
           </ViewTransition>
         </main>
       </div>
+      <CommandPalette
+        open={searchOpen}
+        exercises={exercises.catalog.status === "ready" ? exercises.catalog.exercises : []}
+        onSelect={openFromSearch}
+        onClose={() => {
+          setSearchOpen(false);
+        }}
+      />
     </div>
   );
 }

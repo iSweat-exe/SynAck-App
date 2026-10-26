@@ -15,23 +15,38 @@ interface NavbarActionsProps {
   coins: number;
   /** Days in a row with an exercise solved or a protocol validated. */
   streak: number;
+  /** Opens the search (also opened by Ctrl K). */
+  onOpenSearch: () => void;
   /** The reward just earned, if any, for the XP bar and the coins to celebrate. */
   gain: Gain | null;
   updater: Updater;
 }
 
 /**
- * The right of the navbar, in this order: the tool (search), the progress (level, streak, coins, bonuses), then the system buttons (notifications, theme). The XP bar, the streak, the coins and the theme button work today: the others are placeholders, greyed
+ * The right of the navbar, in this order: the tool (search), the progress (level, streak, coins, bonuses), then the system buttons (notifications, theme). The search, the XP bar, the streak, the coins and the theme button work today: the others are placeholders, greyed
  * out and labelled, so that nobody takes them for a bug. Each one is a feature to build later.
  */
-export function NavbarActions({ xp, coins, streak, gain, updater }: NavbarActionsProps) {
+export function NavbarActions({
+  xp,
+  coins,
+  streak,
+  onOpenSearch,
+  gain,
+  updater,
+}: NavbarActionsProps) {
   const dark = useTheme() === "dark";
   const [shopOpen, setShopOpen] = useState(false);
 
   return (
     <div className="navbar-actions">
       <UpdateButton updater={updater} />
-      <button type="button" className="navbar-search" disabled title={SOON}>
+      <button
+        type="button"
+        className="navbar-search"
+        title="Rechercher (Ctrl K)"
+        aria-keyshortcuts="Control+K Meta+K"
+        onClick={onOpenSearch}
+      >
         <NavIcon name="search" />
         <span>Rechercher</span>
         <kbd>Ctrl K</kbd>
