@@ -2389,3 +2389,30 @@ body:has(.shop[open]) {
     display: none;
   }
 }
+
+/* Hints: asked for one at a time, never all at once. */
+
+.hints {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.hints-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.hints-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hint {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+}

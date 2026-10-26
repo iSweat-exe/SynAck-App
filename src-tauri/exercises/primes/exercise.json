@@ -22,6 +22,11 @@
       "output": "2"
     }
   ],
+  "hints": [
+    "`1` n'est pas premier. Commence donc à `2`.",
+    "Pour tester un nombre `k` : essaie de le diviser par chaque `d` de `2` à `k - 1`. Un seul diviseur suffit pour dire qu'il n'est pas premier.",
+    "Pour chaque `k` de `2` à `n`, garde-le si aucun `d` ne le divise. Affiche les nombres gardés, séparés par des espaces."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\n\n# Affiche les nombres premiers jusqu'à n, séparés par des espaces.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\n\n// Affiche les nombres premiers jusqu'à n, séparés par des espaces.\n"

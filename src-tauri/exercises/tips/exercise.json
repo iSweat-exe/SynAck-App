@@ -20,6 +20,11 @@
       "output": "Total des pourboires : 8.91 €"
     }
   ],
+  "hints": [
+    "Travaille en **centimes** (des entiers) pour éviter les erreurs d'arrondi des nombres décimaux.",
+    "Le pourboire d'une table, en centimes, vaut `addition × pourcentage` (une addition en euros multipliée par un pourcentage donne des centimes).",
+    "Additionne ces centimes pour toutes les tables, puis affiche `total // 100`, un point, et `total % 100` sur **deux chiffres**, suivi de ` €`."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nk = int(lines[0])\n\n# Pour chaque table : addition et pourcentage, sur les k lignes suivantes.\n# Affiche : Total des pourboires : ... €\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst k = Number(lines[0]);\n\n// Pour chaque table : addition et pourcentage, sur les k lignes suivantes.\n// Affiche : Total des pourboires : ... €\n"

@@ -25,6 +25,8 @@ export interface Exercise {
   /** Traps and hints worth knowing before starting. Markdown. `null` when there are none. */
   notes: string | null;
   examples: Example[];
+  /** Three hints, from the lightest to the most precise. */
+  hints: string[];
   /** Code shown in the editor, by language id. The keys are the languages on offer. */
   starters: Record<string, string>;
 }

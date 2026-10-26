@@ -21,6 +21,11 @@
       "output": "non"
     }
   ],
+  "hints": [
+    "Un palindrome est égal à lui-même **lu à l'envers**.",
+    "Construis le mot inversé (`mot[::-1]` en Python, `split(\"\").reverse().join(\"\")` en JavaScript) et compare-le au mot d'origine.",
+    "Si le mot est égal à son inverse, affiche `oui`, sinon `non`. Un mot d'une seule lettre est déjà son propre inverse : aucun cas particulier à écrire."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nmot = lines[0]\n\n# Affiche oui ou non.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst mot = lines[0];\n\n// Affiche oui ou non.\n"

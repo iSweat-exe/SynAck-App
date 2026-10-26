@@ -20,6 +20,11 @@
       "output": "12"
     }
   ],
+  "hints": [
+    "Un dictionnaire associe **une clé à une seule valeur**. Que devient une clé qui arrive deux fois ?",
+    "Pour chaque ligne, écris `dico[clé] = valeur` : une clé répétée **remplace** l'ancienne valeur.",
+    "Une fois toutes les lignes lues, additionne les valeurs du dictionnaire (`sum(dico.values())` en Python, `Object.values` en JavaScript). Ne somme pas pendant la lecture : tu compterais les anciennes valeurs."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nk = int(lines[0])\n\n# Construis le dictionnaire avec les k lignes suivantes,\n# puis affiche la somme de ses valeurs.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst k = Number(lines[0]);\n\n// Construis l'objet avec les k lignes suivantes,\n// puis affiche la somme de ses valeurs.\n"

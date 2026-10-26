@@ -36,6 +36,8 @@ export function ExercisesScreen({
 }: ExercisesScreenProps) {
   // Kept here, not in the list, so the filters survive opening an exercise and coming back.
   const [criteria, setCriteria] = useState<Criteria>(NO_FILTER);
+  // The hints already asked for, by exercise: leaving an exercise does not hide them again.
+  const [hintsShown, setHintsShown] = useState<Record<string, number>>({});
 
   const { catalog, solved, refreshSolved } = exercises;
   if (catalog.status === "loading") return <p>Chargement des exercices…</p>;
@@ -55,6 +57,13 @@ export function ExercisesScreen({
           exercise={selected}
           environment={environment}
           solved={solved.some((entry) => entry.exercise === selected.id)}
+          hintsShown={hintsShown[selected.id] ?? 0}
+          onRevealHint={() => {
+            setHintsShown((previous) => ({
+              ...previous,
+              [selected.id]: Math.min((previous[selected.id] ?? 0) + 1, selected.hints.length),
+            }));
+          }}
           getCode={(language) =>
             drafts.record[draftKey(selected.id, language)] ?? selected.starters[language] ?? ""
           }

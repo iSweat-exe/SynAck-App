@@ -21,6 +21,11 @@
       "output": "bonjour"
     }
   ],
+  "hints": [
+    "Découpe la phrase en **mots**, pas en lettres.",
+    "`split()` (Python) ou `split(\" \")` (JavaScript) donne la liste des mots ; inverse cette liste, pas les lettres.",
+    "Inverse la liste (`reversed`, `[::-1]` ou `.reverse()`), puis rassemble-la avec un espace entre chaque mot."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nphrase = lines[0]\n\n# Affiche les mots dans l'ordre inverse.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst phrase = lines[0];\n\n// Affiche les mots dans l'ordre inverse.\n"

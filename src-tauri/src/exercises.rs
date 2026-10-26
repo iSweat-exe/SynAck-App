@@ -43,6 +43,9 @@ pub struct Exercise {
     #[serde(default)]
     pub notes: Option<String>,
     pub examples: Vec<Example>,
+    /// Three hints, from the lightest to the most precise. The interface shows them one at a time.
+    #[serde(default)]
+    pub hints: Vec<String>,
     /// Code shown in the editor, by language id (see `languages.json`).
     pub starters: BTreeMap<String, String>,
 }
@@ -132,6 +135,20 @@ mod tests {
             assert!(
                 sql.contains(&row),
                 "add {row} to catalog_items in a new migration"
+            );
+        }
+    }
+
+    #[test]
+    fn every_exercise_should_have_three_different_hints() {
+        for exercise in all().unwrap() {
+            assert_eq!(exercise.hints.len(), 3, "{}: three hints", exercise.id);
+            let distinct: std::collections::BTreeSet<_> = exercise.hints.iter().collect();
+            assert_eq!(distinct.len(), 3, "{}: the hints differ", exercise.id);
+            assert!(
+                exercise.hints.iter().all(|hint| !hint.trim().is_empty()),
+                "{}: no empty hint",
+                exercise.id
             );
         }
     }

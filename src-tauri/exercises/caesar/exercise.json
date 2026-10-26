@@ -21,6 +21,11 @@
       "output": "bonjour"
     }
   ],
+  "hints": [
+    "Chaque lettre est un numéro : `a` = 0, `b` = 1, … `z` = 25. Décaler, c'est ajouter `k` à ce numéro.",
+    "Après `z`, on revient à `a` : utilise le **modulo 26**. Les espaces ne sont pas des lettres : laisse-les tels quels.",
+    "Pour chaque lettre : `numéro = (ord(lettre) - ord('a') + k) % 26`, puis `chr(ord('a') + numéro)` (en JavaScript : `charCodeAt` et `String.fromCharCode`). Assemble le résultat."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\ndecalage = int(lines[0])\ntexte = lines[1]\n\n# Affiche le texte chiffré.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst decalage = Number(lines[0]);\nconst texte = lines[1];\n\n// Affiche le texte chiffré.\n"
