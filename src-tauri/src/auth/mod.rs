@@ -14,14 +14,14 @@ mod callback;
 mod csp;
 mod pkce;
 mod service;
-mod store;
+pub(crate) mod store;
 mod supabase;
 #[cfg(test)]
-mod testing;
+pub(crate) mod testing;
 mod user;
 
 use serde::Deserialize;
-use tauri::State;
+use tauri::{AppHandle, State};
 use url::Url;
 
 pub use service::AuthService;
@@ -30,6 +30,7 @@ pub use supabase::{Client, Config};
 pub use user::AuthUser;
 
 use crate::error::AppError;
+use crate::sync;
 
 /// The loopback port of the redirect. It MUST be allowed in the Supabase project
 /// (Authentication > URL Configuration > Redirect URLs): `http://127.0.0.1:53682/callback`.
@@ -60,21 +61,31 @@ fn open_in_browser(url: &Url) -> Result<(), AppError> {
 
 /// Who is signed in, if anyone. Restores the saved session silently when the app opens.
 #[tauri::command]
-pub async fn current_user(service: State<'_, AuthService>) -> Result<Option<AuthUser>, AppError> {
-    service.restore().await
+pub async fn current_user(
+    app: AppHandle,
+    service: State<'_, AuthService>,
+) -> Result<Option<AuthUser>, AppError> {
+    let user = service.restore().await?;
+    if user.is_some() {
+        sync::spawn(app);
+    }
+    Ok(user)
 }
 
 /// Signs in with `provider` through the system browser. The age declaration is required here,
 /// not only in the interface.
 #[tauri::command]
 pub async fn sign_in(
+    app: AppHandle,
     service: State<'_, AuthService>,
     provider: Provider,
     age_confirmed: bool,
 ) -> Result<AuthUser, AppError> {
-    service
+    let user = service
         .sign_in(provider, age_confirmed, open_in_browser)
-        .await
+        .await?;
+    sync::spawn(app);
+    Ok(user)
 }
 
 /// Gives up a sign-in that is waiting for the browser.

@@ -1,4 +1,5 @@
-import type { CSSProperties } from "react";
+import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { HEADER_HEIGHT, layoutDiagram, type Row } from "../protocols/layout";
 import { statesAt, type TimelineStep } from "../protocols/timeline";
 import type { Actor } from "../protocols/types";
@@ -14,6 +15,9 @@ interface SequenceDiagramProps {
 
 const ARROW = 9;
 const LOST_AT = 0.55;
+const EASE = [0.2, 0, 0, 1] as const;
+// The head and the label appear once the line has nearly reached them.
+const APPEAR = { duration: 0.3, delay: 0.55, ease: EASE };
 
 /** The diagram as text, for those who do not see it. */
 function describe(actors: readonly Actor[], timeline: readonly TimelineStep[], current: number) {
@@ -21,40 +25,73 @@ function describe(actors: readonly Actor[], timeline: readonly TimelineStep[], c
   return `Schéma entre ${names}. Étape ${String(current + 1)} sur ${String(timeline.length)}.`;
 }
 
-function Arrow({ row, step, animated }: { row: Row; step: TimelineStep; animated: boolean }) {
+/**
+ * `plays` is fixed when the row is mounted: a row that was the current step keeps animating to the
+ * end even after the learner moves on, instead of being cut short and jumping to its final state.
+ */
+function Arrow({ row, step, plays }: { row: Row; step: TimelineStep; plays: boolean }) {
   const direction = Math.sign(row.x2 - row.x1);
   const lost = step.kind === "lost";
   const reach = lost ? row.x1 + (row.x2 - row.x1) * LOST_AT : row.x2;
   // The line stops at the head of the arrow, so that its end is not wider than the tip.
   const lineEnd = lost ? reach : reach - direction * ARROW;
   const labelX = (row.x1 + row.x2) / 2;
-  const travel = { "--dx": `${String(reach - row.x1)}px` } as CSSProperties;
+  const fadeIn = plays
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: APPEAR }
+    : {};
 
   return (
     <>
-      <line className="seq-line" x1={row.x1} y1={row.y} x2={lineEnd} y2={row.y} pathLength={1} />
+      <motion.line
+        className="seq-line"
+        x1={row.x1}
+        y1={row.y}
+        x2={lineEnd}
+        y2={row.y}
+        initial={plays ? { pathLength: 0 } : false}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.7, ease: EASE }}
+      />
       {lost ? (
-        <path
+        <motion.path
           className="seq-cross"
           d={`M ${String(reach - 7)} ${String(row.y - 7)} l 14 14 m 0 -14 l -14 14`}
+          {...fadeIn}
         />
       ) : (
-        <polygon
+        <motion.polygon
           className="seq-head"
           points={`${String(row.x2)},${String(row.y)} ${String(row.x2 - direction * ARROW)},${String(row.y - 5)} ${String(row.x2 - direction * ARROW)},${String(row.y + 5)}`}
+          {...fadeIn}
         />
       )}
-      <text className="seq-label" x={labelX} y={row.y - 11} textAnchor="middle">
+      <motion.text className="seq-label" x={labelX} y={row.y - 11} textAnchor="middle" {...fadeIn}>
         {step.label}
-      </text>
-      {animated && <circle className="seq-packet" cx={row.x1} cy={row.y} r={6} style={travel} />}
+      </motion.text>
+      {plays && (
+        <motion.circle
+          className="seq-packet"
+          cx={row.x1}
+          cy={row.y}
+          r={6}
+          initial={{ x: 0, opacity: 1 }}
+          animate={{ x: reach - row.x1, opacity: [1, 1, 0] }}
+          transition={{ duration: 0.7, ease: EASE, opacity: { duration: 0.7, times: [0, 0.8, 1] } }}
+        />
+      )}
     </>
   );
 }
 
-function LocalBox({ row, step }: { row: Row; step: TimelineStep }) {
+function LocalBox({ row, step, plays }: { row: Row; step: TimelineStep; plays: boolean }) {
   return (
-    <g className={step.kind === "wait" ? "seq-box seq-box-wait" : "seq-box"}>
+    <motion.g
+      className={step.kind === "wait" ? "seq-box seq-box-wait" : "seq-box"}
+      style={{ transformBox: "fill-box", transformOrigin: "center" }}
+      initial={plays ? { opacity: 0, scale: 0.25, filter: "blur(4px)" } : false}
+      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+      transition={{ duration: 0.3, ease: EASE }}
+    >
       <rect x={row.box.x} y={row.y - 20} width={row.box.width} height={40} rx={8} />
       <text
         className="seq-label"
@@ -64,6 +101,37 @@ function LocalBox({ row, step }: { row: Row; step: TimelineStep }) {
       >
         {step.label}
       </text>
+    </motion.g>
+  );
+}
+
+/** One played step. It remembers whether it was the current one when it appeared. */
+function StepRow({
+  row,
+  step,
+  isCurrent,
+  layoutWidth,
+}: {
+  row: Row;
+  step: TimelineStep;
+  isCurrent: boolean;
+  layoutWidth: number;
+}) {
+  const reduceMotion = useReducedMotion();
+  const [plays] = useState(isCurrent && reduceMotion !== true);
+  return (
+    <g
+      className={`seq-row seq-tone-${step.tone}${isCurrent ? " seq-row-current" : ""}`}
+      aria-current={isCurrent ? "step" : undefined}
+    >
+      {isCurrent && (
+        <rect className="seq-band" x={0} y={row.y - 30} width={layoutWidth} height={60} />
+      )}
+      {row.local ? (
+        <LocalBox row={row} step={step} plays={plays} />
+      ) : (
+        <Arrow row={row} step={step} plays={plays} />
+      )}
     </g>
   );
 }
@@ -134,23 +202,15 @@ export function SequenceDiagram({ actors, timeline, current, run }: SequenceDiag
       {timeline.slice(0, current + 1).map((step, index) => {
         const row = layout.rows[index];
         if (!row) return null;
-        const isCurrent = index === current;
         return (
-          <g
+          <StepRow
             // The run is part of the key: restarting remounts the row, so its animation plays again.
             key={`${String(run)}-${String(index)}-${step.label}`}
-            className={`seq-row seq-tone-${step.tone}${isCurrent ? " seq-row-current" : ""}`}
-            aria-current={isCurrent ? "step" : undefined}
-          >
-            {isCurrent && (
-              <rect className="seq-band" x={0} y={row.y - 30} width={layout.width} height={60} />
-            )}
-            {row.local ? (
-              <LocalBox row={row} step={step} />
-            ) : (
-              <Arrow row={row} step={step} animated={isCurrent} />
-            )}
-          </g>
+            row={row}
+            step={step}
+            isCurrent={index === current}
+            layoutWidth={layout.width}
+          />
         );
       })}
     </svg>

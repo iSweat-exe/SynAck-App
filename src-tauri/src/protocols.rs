@@ -15,10 +15,12 @@ use std::sync::{Mutex, PoisonError};
 
 use fastrand::Rng;
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
 
+use crate::auth::AuthService;
 use crate::error::AppError;
 use crate::progress::ProgressStore;
+use crate::sync;
 
 /// Every question must be right: this is what "validated" means.
 const QUESTIONS: usize = 8;
@@ -453,15 +455,20 @@ pub async fn start_protocol_quiz(
 /// Grades a quiz and, when every answer is right, records the protocol as validated.
 #[tauri::command]
 pub async fn submit_protocol_quiz(
+    app: AppHandle,
     sessions: State<'_, QuizSessions>,
     store: State<'_, ProgressStore>,
+    auth: State<'_, AuthService>,
     protocol: String,
     answers: Vec<Vec<String>>,
 ) -> Result<QuizResult, AppError> {
+    // The account comes from the sign-in service: a validation is only ever recorded for it.
+    let user_id = auth.user_id().await.ok_or(AppError::NotSignedIn)?;
     let attempt = sessions.take(&protocol).ok_or(AppError::QuizExpired)?;
     let result = grade(&attempt, &answers)?;
     if result.validated {
-        store.mark_protocol_validated(&protocol)?;
+        store.mark_protocol_validated(&user_id, &protocol)?;
+        sync::spawn(app);
     }
     Ok(result)
 }

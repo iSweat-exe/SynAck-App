@@ -865,11 +865,39 @@ h3.label.callout-label,
   --card-shadow: var(--success-accent);
 }
 
+/* A struck-through title read as "deleted": the card keeps its title and gets a soft green tint and a seal. */
+.exercise-card[data-solved="true"] {
+  position: relative;
+  background: color-mix(in srgb, var(--success-bg) 40%, var(--surface));
+}
+
 .exercise-card[data-solved="true"] .exercise-card-title {
-  color: var(--muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--success-accent);
-  text-decoration-thickness: var(--u);
+  padding-right: 2rem;
+}
+
+/* The seal: a circle in the corner with a check drawn from two borders (no image, so the CSP stays shut). */
+.exercise-card[data-solved="true"]::before {
+  content: "";
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--success-fg);
+}
+
+.exercise-card[data-solved="true"]::after {
+  content: "";
+  position: absolute;
+  /* Anchored on the circle's center, then pulled up a hair: a rotated "L" looks lower than its box. */
+  top: calc(0.9rem + 0.8rem);
+  right: calc(0.9rem + 0.8rem);
+  width: 0.35rem;
+  height: 0.65rem;
+  border: solid var(--surface);
+  border-width: 0 2px 2px 0;
+  transform: translate(50%, calc(-50% - 0.07rem)) rotate(45deg);
 }
 
 /* The success panel. It happens rarely and matters: it is staged, not instant. */
@@ -1329,6 +1357,8 @@ h3.label.callout-label,
 /*
  * Page transitions (React <ViewTransition>). Between sections: a short fade. Between a list and its
  * detail: the new page slides in from the side it comes from. Short, because they are frequent.
+ * The exit curve is the entry curve played backwards (cubic-bezier(1, 0, 0.8, 1) mirrors
+ * cubic-bezier(0.2, 0, 0, 1)), so what leaves retraces the way it came.
  */
 
 ::view-transition-old(.page-out) {
@@ -1340,7 +1370,7 @@ h3.label.callout-label,
 }
 
 ::view-transition-old(.depth-out-forward) {
-  animation: depth-out-left 0.16s ease-in both;
+  animation: depth-out-left 0.16s cubic-bezier(1, 0, 0.8, 1) both;
 }
 
 ::view-transition-new(.depth-in-forward) {
@@ -1348,7 +1378,7 @@ h3.label.callout-label,
 }
 
 ::view-transition-old(.depth-out-back) {
-  animation: depth-out-right 0.16s ease-in both;
+  animation: depth-out-right 0.16s cubic-bezier(1, 0, 0.8, 1) both;
 }
 
 ::view-transition-new(.depth-in-back) {
@@ -2078,6 +2108,13 @@ h3.label.callout-label,
 @starting-style {
   .shop[open]::backdrop {
     opacity: 0;
+  }
+}
+
+/* Less transparency, or more contrast, asked for: the veil hides what is behind instead of dimming it. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .shop::backdrop {
+    background: rgb(20 16 26 / 0.92);
   }
 }
 

@@ -4,6 +4,7 @@
 use std::time::Duration;
 
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 use url::Url;
 
@@ -43,13 +44,24 @@ impl Config {
 pub struct Session {
     pub access_token: String,
     pub refresh_token: String,
+    /// How long the access token stays valid, from the moment it was issued.
+    pub expires_in: Duration,
     pub user: AuthUser,
+}
+
+/// Supabase's default lifetime of an access token, used when the answer does not say.
+const DEFAULT_TOKEN_LIFETIME_SECS: u64 = 3600;
+
+fn default_token_lifetime() -> u64 {
+    DEFAULT_TOKEN_LIFETIME_SECS
 }
 
 #[derive(Deserialize)]
 struct TokenResponse {
     access_token: String,
     refresh_token: String,
+    #[serde(default = "default_token_lifetime")]
+    expires_in: u64,
     user: Value,
 }
 
@@ -147,6 +159,7 @@ impl Client {
             user: AuthUser::from_json(&token.user).ok_or(AppError::AuthRejected)?,
             access_token: token.access_token,
             refresh_token: token.refresh_token,
+            expires_in: Duration::from_secs(token.expires_in),
         })
     }
 
@@ -175,6 +188,63 @@ impl Client {
         }
     }
 
+    /// Calls a database function of the project (`/rest/v1/rpc/<function>`) as the signed-in
+    /// account. `function` is always a constant of the calling module, never user input.
+    ///
+    /// # Errors
+    ///
+    /// [`AppError::SyncUnavailable`] when it may work later (offline, server error, expired
+    /// token), [`AppError::SyncRejected`] when the server refuses what was sent.
+    pub async fn rpc(
+        &self,
+        access_token: &str,
+        function: &str,
+        arguments: &Value,
+    ) -> Result<(), AppError> {
+        let response = self
+            .http
+            .post(self.endpoint(&format!("rest/v1/rpc/{function}")))
+            .header("apikey", &self.anon_key)
+            .bearer_auth(access_token)
+            .json(arguments)
+            .send()
+            .await
+            .map_err(|_| AppError::SyncUnavailable)?;
+        if response.status().is_success() {
+            Ok(())
+        } else {
+            Err(data_failure(response.status()))
+        }
+    }
+
+    /// Reads the `columns` of the rows of `table` that the signed-in account may see (row level
+    /// security decides which). `table` and `columns` are constants of the calling module.
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Client::rpc`]; an answer that is not the expected rows is a refusal.
+    pub async fn select<T: DeserializeOwned>(
+        &self,
+        access_token: &str,
+        table: &str,
+        columns: &str,
+    ) -> Result<Vec<T>, AppError> {
+        let mut url = self.endpoint(&format!("rest/v1/{table}"));
+        url.query_pairs_mut().append_pair("select", columns);
+        let response = self
+            .http
+            .get(url)
+            .header("apikey", &self.anon_key)
+            .bearer_auth(access_token)
+            .send()
+            .await
+            .map_err(|_| AppError::SyncUnavailable)?;
+        if !response.status().is_success() {
+            return Err(data_failure(response.status()));
+        }
+        response.json().await.map_err(|_| AppError::SyncRejected)
+    }
+
     /// Ends this device's session on the server. Best effort: the local cleanup does not depend
     /// on it, and a failure here only means the server forgets a bit later.
     pub async fn sign_out(&self, access_token: &str) {
@@ -196,6 +266,19 @@ fn failure(status: reqwest::StatusCode) -> AppError {
         AppError::AuthNetwork
     } else {
         AppError::AuthRejected
+    }
+}
+
+/// For the Data API: trouble that may pass (server, throttling, an access token that has just
+/// expired) is retried later; anything else is a definitive "no".
+fn data_failure(status: reqwest::StatusCode) -> AppError {
+    if status.is_server_error()
+        || status == reqwest::StatusCode::TOO_MANY_REQUESTS
+        || status == reqwest::StatusCode::UNAUTHORIZED
+    {
+        AppError::SyncUnavailable
+    } else {
+        AppError::SyncRejected
     }
 }
 
@@ -245,6 +328,28 @@ mod tests {
         for status in [500, 502, 503, 429] {
             let status = reqwest::StatusCode::from_u16(status).unwrap();
             assert!(matches!(failure(status), AppError::AuthNetwork), "{status}");
+        }
+    }
+
+    #[test]
+    fn data_failure_should_retry_later_when_the_server_fails_or_the_token_expired() {
+        for status in [401, 429, 500, 503] {
+            let status = reqwest::StatusCode::from_u16(status).unwrap();
+            assert!(
+                matches!(data_failure(status), AppError::SyncUnavailable),
+                "{status}"
+            );
+        }
+    }
+
+    #[test]
+    fn data_failure_should_refuse_definitively_when_the_request_is_wrong() {
+        for status in [400, 403, 404, 409] {
+            let status = reqwest::StatusCode::from_u16(status).unwrap();
+            assert!(
+                matches!(data_failure(status), AppError::SyncRejected),
+                "{status}"
+            );
         }
     }
 

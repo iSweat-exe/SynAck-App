@@ -10,6 +10,7 @@ mod path;
 mod progress;
 mod protocols;
 mod runner;
+mod sync;
 
 use tauri::Manager;
 

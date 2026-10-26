@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { onProgressChanged } from "../api/events";
 import { getSolved, listExercises, type Exercise, type SolvedEntry } from "../api/exercises";
 
 export type CatalogState =
@@ -35,6 +36,26 @@ export function useExercises(): Exercises {
       });
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  // Progress made on another computer arrives a moment after the app opens.
+  useEffect(() => {
+    let cancelled = false;
+    const stop = onProgressChanged(() => {
+      getSolved()
+        .then((entries) => {
+          if (!cancelled) setSolved(entries);
+        })
+        .catch((error: unknown) => {
+          if (!cancelled) setCatalog({ status: "failed", message: toMessage(error) });
+        });
+    });
+    return () => {
+      cancelled = true;
+      void stop.then((unlisten) => {
+        unlisten();
+      });
     };
   }, []);
 

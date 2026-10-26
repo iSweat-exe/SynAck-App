@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { onProgressChanged } from "../api/events";
 import { getValidatedProtocols } from "../api/protocols";
 
 export interface ValidatedProtocols {
@@ -29,6 +30,26 @@ export function useValidatedProtocols(): ValidatedProtocols {
       });
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  // Progress made on another computer arrives a moment after the app opens.
+  useEffect(() => {
+    let cancelled = false;
+    const stop = onProgressChanged(() => {
+      getValidatedProtocols()
+        .then((list) => {
+          if (!cancelled) setIds(new Set(list));
+        })
+        .catch((failure: unknown) => {
+          if (!cancelled) setError(toMessage(failure));
+        });
+    });
+    return () => {
+      cancelled = true;
+      void stop.then((unlisten) => {
+        unlisten();
+      });
     };
   }, []);
 

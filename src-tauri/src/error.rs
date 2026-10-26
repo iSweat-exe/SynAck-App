@@ -47,6 +47,14 @@ pub enum AppError {
     AuthStorage(String),
     #[error("La configuration de la connexion est invalide : {0}")]
     AuthConfig(String),
+    #[error("Tu dois être connecté pour faire cela.")]
+    NotSignedIn,
+    #[error(
+        "La synchronisation est impossible pour le moment. Ta progression reste sur cet ordinateur et sera envoyée plus tard."
+    )]
+    SyncUnavailable,
+    #[error("Le serveur a refusé d'enregistrer la progression.")]
+    SyncRejected,
     #[error("Impossible de préparer ou de lancer l'exécution : {0}")]
     Io(#[from] std::io::Error),
 }

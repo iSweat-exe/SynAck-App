@@ -1,5 +1,11 @@
 import { useEffect } from "react";
-import { animate, motion, useAnimationControls, useMotionValue } from "motion/react";
+import {
+  animate,
+  motion,
+  useAnimationControls,
+  useMotionValue,
+  useReducedMotion,
+} from "motion/react";
 import { levelOf, type Gain } from "../xp";
 import { Burst } from "./Burst";
 import { usePlayback } from "./usePlayback";
@@ -14,6 +20,7 @@ export function XpBar({ xp, gain }: { xp: number; gain: Gain | null }) {
   const { shown, playback } = usePlayback(xp, gain, gain?.xp ?? 0);
   const fill = useMotionValue(levelOf(xp).into / size);
   const pulse = useAnimationControls();
+  const reduceMotion = useReducedMotion() === true;
 
   const leveledUp = playback !== null && levelOf(playback.to).level > levelOf(playback.from).level;
 
@@ -29,6 +36,11 @@ export function XpBar({ xp, gain }: { xp: number; gain: Gain | null }) {
     const to = levelOf(playback.to);
     const start = from.into / from.size;
     const end = to.into / to.size;
+    // Imperative animations are not covered by MotionConfig: someone who asked for less motion gets the total at once.
+    if (reduceMotion) {
+      fill.set(end);
+      return;
+    }
     const controls =
       to.level > from.level
         ? // Up to the top, back to the bottom while nobody looks, then up to where it stands.
@@ -42,7 +54,7 @@ export function XpBar({ xp, gain }: { xp: number; gain: Gain | null }) {
     return () => {
       controls.stop();
     };
-  }, [playback, fill, pulse]);
+  }, [playback, fill, pulse, reduceMotion]);
 
   return (
     <div

@@ -8,14 +8,16 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use fastrand::Rng;
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
 
+use crate::auth::AuthService;
 use crate::cases::{self, Case};
 use crate::error::AppError;
 use crate::execute::{self, COMPILE_TIMEOUT, Prepare, Prepared};
 use crate::exercises::{self, Exercise};
 use crate::progress::ProgressStore;
 use crate::runner::RunOutput;
+use crate::sync;
 
 /// A solution this long is not a solution: it is a lookup table or something worse.
 const MAX_CODE_BYTES: usize = 20_000;
@@ -232,17 +234,22 @@ fn fresh_seed() -> u64 {
 /// Checks the learner's code and, when it passes everything, records the exercise as solved.
 #[tauri::command]
 pub async fn check_exercise(
+    app: AppHandle,
     store: State<'_, ProgressStore>,
+    auth: State<'_, AuthService>,
     exercise: String,
     language: String,
     code: String,
     mode: Mode,
 ) -> Result<CheckReport, AppError> {
+    // The account comes from the sign-in service: a success is only ever recorded for it.
+    let user_id = auth.user_id().await.ok_or(AppError::NotSignedIn)?;
     let exercise = exercises::find(&exercise)?;
     let mut rng = Rng::with_seed(fresh_seed());
     let report = check(&exercise, &language, &code, mode, &mut rng, CASE_TIMEOUT).await?;
     if report.solved {
-        store.mark_solved(&exercise.id, &language)?;
+        store.mark_solved(&user_id, &exercise.id, &language)?;
+        sync::spawn(app);
     }
     Ok(report)
 }

@@ -77,6 +77,8 @@ h2,
 h3 {
   margin: 0;
   line-height: 1.25;
+  /* Large type reads too loose in a wide mono face: titles are tracked in a little. */
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 

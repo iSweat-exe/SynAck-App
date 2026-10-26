@@ -5,7 +5,7 @@
 //! [`AuthUser`].
 
 use std::sync::{Arc, Mutex as StdMutex, PoisonError};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use tokio::sync::{Mutex, Notify};
 use url::Url;
@@ -21,8 +21,20 @@ use crate::error::AppError;
 /// The learner has this long to finish signing in in the browser.
 pub const SIGN_IN_TIMEOUT: Duration = Duration::from_secs(180);
 
+/// What a request to the Data API needs. It holds a secret, so it deliberately has no `Debug`,
+/// and it never leaves the Rust side.
+pub struct Credentials {
+    pub access_token: String,
+    pub user_id: String,
+}
+
+/// An access token is renewed when it has less than this left, so that it never expires
+/// during a request.
+const RENEW_MARGIN: Duration = Duration::from_secs(60);
+
 struct ActiveSession {
     access_token: String,
+    expires_at: Instant,
     user: AuthUser,
 }
 
@@ -76,21 +88,69 @@ impl AuthService {
             return Ok(None);
         };
 
-        match self.client.refresh(&saved).await {
+        self.renew(&mut session, &saved).await?;
+        Ok(session.as_ref().map(|active| active.user.clone()))
+    }
+
+    /// Trades the saved refresh token for a new session. A token that is definitively refused
+    /// (expired, revoked, or already used) ends the session; a network failure keeps everything.
+    async fn renew(
+        &self,
+        session: &mut Option<ActiveSession>,
+        saved: &str,
+    ) -> Result<(), AppError> {
+        match self.client.refresh(saved).await {
             Ok(fresh) => {
                 // The old token is spent: the new one must be saved before anything else.
                 self.store.save(&fresh.refresh_token)?;
-                let user = fresh.user.clone();
                 *session = Some(active(fresh));
-                Ok(Some(user))
+                Ok(())
             }
             Err(AppError::AuthRejected) => {
-                // Expired, revoked, or already used: it will never work again.
                 self.store.clear()?;
-                Ok(None)
+                *session = None;
+                Ok(())
             }
             Err(error) => Err(error),
         }
+    }
+
+    /// The id of the account that is signed in, without touching the network.
+    pub async fn user_id(&self) -> Option<String> {
+        self.session
+            .lock()
+            .await
+            .as_ref()
+            .map(|active| active.user.id.clone())
+    }
+
+    /// What to send to the Data API as the signed-in account, renewing the access token first if
+    /// it is about to expire. `None` when nobody is signed in.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the token had to be renewed and could not be (offline, secret store
+    /// locked). Nothing is lost in that case: it works again once the network is back.
+    pub async fn credentials(&self) -> Result<Option<Credentials>, AppError> {
+        let mut session = self.session.lock().await;
+        let expiring = session.as_ref().is_some_and(|active| {
+            active.expires_at.saturating_duration_since(Instant::now()) <= RENEW_MARGIN
+        });
+        if expiring {
+            match self.store.load()? {
+                Some(saved) => self.renew(&mut session, &saved).await?,
+                None => *session = None,
+            }
+        }
+        Ok(session.as_ref().map(|active| Credentials {
+            access_token: active.access_token.clone(),
+            user_id: active.user.id.clone(),
+        }))
+    }
+
+    /// The client of the project, for the modules that talk to its Data API.
+    pub fn client(&self) -> &Client {
+        &self.client
     }
 
     /// Signs in through the system browser.
@@ -200,6 +260,7 @@ impl AuthService {
 fn active(session: Session) -> ActiveSession {
     ActiveSession {
         access_token: session.access_token,
+        expires_at: Instant::now() + session.expires_in,
         user: session.user,
     }
 }
@@ -593,6 +654,69 @@ mod tests {
         service.sign_out().await.unwrap();
 
         assert_eq!(store.current(), None);
+    }
+
+    #[tokio::test]
+    async fn credentials_should_be_nobody_when_nobody_is_signed_in() {
+        let mock = Mock::start(healthy).await;
+        let store = Arc::new(MemoryStore::default());
+        let service = service_for(&mock.url, &store, SIGN_IN_TIMEOUT);
+
+        assert!(service.credentials().await.unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn credentials_should_give_the_access_token_without_renewing_it_while_it_is_valid() {
+        let mock = Mock::start(healthy).await;
+        let store = Arc::new(MemoryStore::with_token("refresh-0"));
+        let service = service_for(&mock.url, &store, SIGN_IN_TIMEOUT);
+        service.restore().await.unwrap();
+
+        let credentials = service.credentials().await.unwrap().unwrap();
+
+        assert_eq!(credentials.access_token, "access-1");
+        assert_eq!(mock.requests_to("/auth/v1/token").len(), 1);
+    }
+
+    #[tokio::test]
+    async fn credentials_should_renew_the_access_token_when_it_is_about_to_expire() {
+        // The server says the token lives 10 seconds: less than the renewal margin.
+        let mock = Mock::start(|request: &Recorded| match request.path() {
+            "/auth/v1/token" => (200, session_body("refresh-1").replace("3600", "10")),
+            _ => healthy(request),
+        })
+        .await;
+        let store = Arc::new(MemoryStore::with_token("refresh-0"));
+        let service = service_for(&mock.url, &store, SIGN_IN_TIMEOUT);
+        service.restore().await.unwrap();
+
+        service.credentials().await.unwrap();
+
+        assert_eq!(mock.requests_to("/auth/v1/token").len(), 2);
+    }
+
+    #[tokio::test]
+    async fn credentials_should_keep_the_session_when_the_renewal_cannot_reach_the_server() {
+        let mock = Mock::start(|request: &Recorded| match request.path() {
+            "/auth/v1/token" if request.query("grant_type").as_deref() == Some("refresh_token") => {
+                (503, "{}".to_owned())
+            }
+            "/auth/v1/token" => (200, session_body("refresh-1").replace("3600", "10")),
+            _ => healthy(request),
+        })
+        .await;
+        let store = Arc::new(MemoryStore::default());
+        let service = service_for(&mock.url, &store, SIGN_IN_TIMEOUT);
+        // Sign in, then let the access token get old.
+        service
+            .sign_in(Provider::Github, true, browser("code=abc"))
+            .await
+            .unwrap();
+
+        let outcome = service.credentials().await;
+
+        assert!(matches!(outcome, Err(AppError::AuthNetwork)));
+        assert_eq!(store.current().as_deref(), Some("refresh-1"));
     }
 
     #[test]

@@ -68,7 +68,8 @@ src-tauri/      Cœur Rust : tout ce qui touche au système (processus, fichiers
   src/exercises.rs  Catalogue (`exercise.json` embarqués), commande `list_exercises`.
   src/cases.rs    LES TESTS CACHÉS : générateurs d'entrées aléatoires + solution de référence (l'oracle) par exercice.
   src/check.rs    Vérification (`check_exercise`) : décide « résolu » et l'enregistre.
-  src/progress.rs Exercices résolus et protocoles validés dans SQLite (`get_solved`, `get_validated_protocols`), migrations par `PRAGMA user_version`.
+  src/progress.rs Exercices résolus et protocoles validés dans SQLite, **par compte** (`get_solved`, `get_validated_protocols`), migrations par `PRAGMA user_version`.
+  src/sync.rs     Synchronisation de cette progression avec Supabase (voir « Données et Supabase »).
   src/protocols.rs LE QUIZ DES PROTOCOLES : génère un quiz différent à chaque fois, le corrige, décide « validé » et l'enregistre (`start_protocol_quiz`, `submit_protocol_quiz`).
   src/error.rs    `AppError` : sérialisé vers le front sous forme de message français.
   capabilities/   Permissions accordées à la fenêtre (principe du moindre privilège).
@@ -107,7 +108,7 @@ Le but est que l'élève **fasse réellement la logique demandée** et ne puisse
 4. Il y a 15 exercices : penser aux **formats sans ambiguïté** entre langages (entiers, mots ; jamais de décimales à arrondir sauf calcul en entiers) et aux **cas limites** qui piègent (liste vide, tous négatifs, `0`, majuscules, ordre à conserver) : les générateurs de `cases.rs` doivent les exercer.
 5. `npm run check` : les tests de cohérence, de corrigés et de triche se lancent seuls.
 
-**Progression** : table `solved(exercise, language, solved_at)` dans `progress.db` (dossier de données de l'appli, `%APPDATA%/app.synack.desktop/` sous Windows). Pour changer le schéma : ajouter une étape dans `migrate` (jamais modifier une étape déjà livrée) et incrémenter `SCHEMA_VERSION`.
+**Progression** : tables `solved(user_id, exercise, language, solved_at, synced)` et `validated_protocols(user_id, protocol, validated_at, synced)` dans `progress.db` (dossier de données de l'appli, `%APPDATA%/app.synack.desktop/` sous Windows). Pour changer le schéma : ajouter une étape dans `migrate` (jamais modifier une étape déjà livrée) et incrémenter `SCHEMA_VERSION`.
 
 ## Protocoles : comment ils sont validés
 
@@ -145,8 +146,8 @@ L'appli **s'ouvre sur la page de connexion** (`LoginPage`) sauf si une session e
 **Points à connaître** :
 
 - Le fournisseur **e-mail est activé** sur le projet et les inscriptions sont ouvertes : n'importe qui peut créer un compte e-mail/mot de passe avec la clé publique, en contournant GitHub/Discord. Si l'appli est OAuth uniquement, le désactiver (_Authentication > Providers > Email_).
-- **La progression locale (`progress.db`) n'est pas encore liée au compte** : deux comptes sur la même machine partagent la même progression. À faire : clé par `user.id`.
-- Pas de rafraîchissement automatique du jeton d'accès avant expiration (aucun appel API ne l'utilise encore, hormis la déconnexion).
+- **La progression est liée au compte** (clé `user.id`, migration SQLite v5) et synchronisée avec Supabase. Les lignes d'avant les comptes (identifiant vide) sont adoptées par le **premier compte** qui se synchronise sur la machine.
+- **Le jeton d'accès est renouvelé avant son expiration** (`AuthService::credentials`, marge de 60 s) : c'est le seul chemin qui le donne aux appels vers l'API de données, et il ne quitte jamais le Rust.
 
 **Tester sans danger** : les builds de debug lisent `SYNACK_KEYRING_ACCOUNT` pour utiliser **une autre entrée du coffre** que celle du vrai compte. **Tout test automatisé doit la définir** et ne doit jamais cliquer sur « Continuer avec GitHub/Discord » ni « Se déconnecter » sur l'instance réelle : cela ouvre le vrai navigateur et peut ouvrir ou fermer une vraie session. Pour tester l'interface sans backend : la charger dans un navigateur isolé avec un faux `window.__TAURI_INTERNALS__`. `cargo test -- --ignored keyring` teste le vrai coffre (entrée de test, nettoyée).
 
@@ -179,6 +180,7 @@ Tout est détaillé dans `docs/RELEASING.md` (secrets GitHub à ajouter, étapes
 - Le code tourne sur la machine de l'utilisateur : tout score ou résultat envoyé par l'application est **forgeable** (la base locale peut être modifiée à la main). Un classement devra être validé côté serveur ou assumé comme non fiable.
 - Aucun secret dans le dépôt. Un fichier `.env` n'est jamais commité.
 - Les données propres à l'utilisateur (progression, réglages) vivent d'abord en local.
+- **Progression en ligne** (migration `20261026180000_progress.sql`, tables `solved_exercises` et `validated_protocols`) : lecture seule pour l'API (RLS : chaque compte ne voit que ses lignes), écriture **uniquement** par `record_solved_exercise()` et `record_validated_protocol()` (valident la forme, jamais d'écrasement). Une réussite est écrite d'abord en local (`synced = 0`), puis envoyée **en arrière-plan** par `sync::spawn` (au lancement, à la connexion, après chaque réussite) ; hors ligne, elle part au prochain passage. Le serveur ramène aussi ce que cet ordinateur ne connaît pas et l'interface en est avertie par l'événement `progress-changed`. **XP, pièces et niveaux ne sont pas stockés** : ils se déduisent des lignes. Le compte vient toujours du service de connexion, jamais du front. **La vérification reste faite sur la machine** : une ligne est une déclaration forgeable, pas une preuve (à juger côté serveur avant tout classement).
 
 ## Design
 

@@ -276,61 +276,10 @@ h4.label {
   stroke-dasharray: 5 4;
 }
 
-/* The step being played: the arrow is drawn, a packet travels along it, then the label appears. */
-
-.seq-row-current .seq-line {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: seq-draw 0.7s cubic-bezier(0.2, 0, 0, 1) forwards;
-}
-
-.seq-row-current .seq-head,
-.seq-row-current .seq-cross,
-.seq-row-current .seq-label {
-  animation: seq-appear 0.3s cubic-bezier(0.2, 0, 0, 1) 0.55s backwards;
-}
-
-.seq-row-current .seq-box {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pop 0.3s cubic-bezier(0.2, 0, 0, 1) backwards;
-}
+/* The step being played is animated by motion (SequenceDiagram), so that it can be interrupted. */
 
 .seq-packet {
   fill: var(--tone);
-  animation: seq-travel 0.7s cubic-bezier(0.2, 0, 0, 1) forwards;
-}
-
-@keyframes seq-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes seq-travel {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  80% {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(var(--dx));
-  }
-}
-
-@keyframes seq-appear {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
 }
 
 @keyframes seq-fade {

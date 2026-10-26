@@ -29,6 +29,8 @@ Règle : **une seule feature « EN COURS » à la fois.** On n'ouvre la suivante
 
 - [x] **Versions, mises à jour et CI/CD** : versions SemVer vérifiées (5 fichiers), mise à jour automatique depuis les releases GitHub (signée, bouton visible dans la navbar), CI sur Windows et Linux, publication par tag, migrations Supabase appliquées automatiquement. Premier passage des workflows à faire sur GitHub (secrets à ajouter : `docs/RELEASING.md`).
 
+- [x] **Progression synchronisée avec Supabase, liée au compte** : exercices résolus et protocoles validés dans le projet Supabase (tables en lecture seule, écriture par fonctions, RLS, tests pgTAP), copie locale par compte, envoi en arrière-plan avec reprise hors ligne, renouvellement du jeton d'accès. XP et pièces s'en déduisent.
+
 ## EN COURS
 
 _Aucune. À choisir par le porteur._
@@ -38,10 +40,11 @@ _Aucune. À choisir par le porteur._
 - [ ] **Plus d'exercices** : en ajouter (voir « Ajouter un exercice » dans `CLAUDE.md`), des plus faciles aux plus difficiles.
 - [ ] **Autres langages dans les exercices** : Go, Rust, puis C et C++ (le moteur sait déjà les exécuter).
 - [ ] **Brouillons conservés** : garder le code en cours d'un exercice quand on ferme l'appli.
-- [ ] **Progression liée au compte** : clé `user.id` dans `progress.db` (aujourd'hui partagée entre comptes).
 - [ ] **Désactiver le fournisseur e-mail** du projet Supabase si l'appli reste OAuth uniquement (réglage du tableau de bord).
 
 ## Idées (hors périmètre, ne pas commencer)
+
+- Suite de la synchronisation, une feature à la fois : réponses de l'onboarding, brouillons (code d'un exercice en cours), série de jours (règle du « jour validé » et fuseau à définir, calcul côté serveur), dépenses de pièces (table côté serveur), indicateur d'état de synchronisation dans l'interface.
 
 - Publication : certificat de signature de code Windows et notarisation Apple (plus d'avertissement à la première installation), canal « bêta » qui reçoit aussi les pré-versions.
 - Boutique : rendre les achats possibles (table de dépenses côté Rust, solde = gagné moins dépensé), puis les bonus et thèmes eux-mêmes. La fenêtre et le catalogue existent déjà, rien ne s'achète.
