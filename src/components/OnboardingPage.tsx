@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Onboarding } from "../api/onboarding";
-import { choose, isAnswered, NO_ANSWERS, toProfile } from "../onboarding/answers";
+import { isAnswered, NO_ANSWERS, toProfile } from "../onboarding/answers";
 import { STEPS } from "../onboarding/questions";
+import { StepOptions } from "./StepOptions";
 
 interface OnboardingPageProps {
   onSave: (profile: Onboarding) => Promise<void>;
@@ -10,8 +11,9 @@ interface OnboardingPageProps {
 }
 
 /**
- * The questions asked once, after the first sign-in: level, aims, time, way of learning. Nothing
- * uses the answers yet; they are kept to recommend exercises, courses and paths later on.
+ * The questions asked once, after the first sign-in: level, aims, time, way of learning. The answers
+ * are kept to recommend exercises (and, later, courses and paths); they can be edited from the
+ * profile.
  */
 export function OnboardingPage({ onSave, onSkip }: OnboardingPageProps) {
   const [index, setIndex] = useState(0);
@@ -81,26 +83,7 @@ export function OnboardingPage({ onSave, onSkip }: OnboardingPageProps) {
             {step.title}
           </legend>
           <p className="onboarding-help">{step.help}</p>
-          <div className="onboarding-options">
-            {step.options.map((option) => (
-              <label key={option.value} className="quiz-option">
-                <input
-                  type={step.kind === "multiple" ? "checkbox" : "radio"}
-                  name={step.key}
-                  checked={answers[step.key].includes(option.value)}
-                  onChange={() => {
-                    setAnswers(choose(answers, step, option.value));
-                  }}
-                />
-                <span className="onboarding-option-text">
-                  <span className="onboarding-option-label">{option.label}</span>
-                  {option.hint !== undefined && (
-                    <span className="onboarding-option-hint">{option.hint}</span>
-                  )}
-                </span>
-              </label>
-            ))}
-          </div>
+          <StepOptions step={step} answers={answers} onChange={setAnswers} />
         </fieldset>
 
         {error !== null && <p className="alert alert-danger">{error}</p>}

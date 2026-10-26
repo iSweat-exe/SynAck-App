@@ -4,12 +4,15 @@ import { getOnboarding, saveOnboarding, type Onboarding } from "../api/onboardin
 export type OnboardingState =
   | { status: "loading" }
   | { status: "needed" }
-  | { status: "done" }
+  | { status: "done"; answers: Onboarding }
   // Reading failed: the questions are not worth blocking the app for, so the shell opens anyway.
   | { status: "failed" };
 
 export interface UseOnboarding {
   state: OnboardingState;
+  /** What the learner answered, once they did: it can then be edited from the profile. */
+  profile: Onboarding | null;
+  /** Records the answers, the first time and each time they are edited. */
   save: (profile: Onboarding) => Promise<void>;
 }
 
@@ -21,7 +24,9 @@ export function useOnboarding(userId: string): UseOnboarding {
     let cancelled = false;
     getOnboarding()
       .then((answers) => {
-        if (!cancelled) setState({ status: answers === null ? "needed" : "done" });
+        if (!cancelled) {
+          setState(answers === null ? { status: "needed" } : { status: "done", answers });
+        }
       })
       .catch(() => {
         if (!cancelled) setState({ status: "failed" });
@@ -33,8 +38,8 @@ export function useOnboarding(userId: string): UseOnboarding {
 
   const save = useCallback(async (profile: Onboarding) => {
     await saveOnboarding(profile);
-    setState({ status: "done" });
+    setState({ status: "done", answers: profile });
   }, []);
 
-  return { state, save };
+  return { state, profile: state.status === "done" ? state.answers : null, save };
 }

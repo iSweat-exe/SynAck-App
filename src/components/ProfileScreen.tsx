@@ -1,15 +1,27 @@
 import type { AuthUser } from "../api/auth";
+import type { Onboarding } from "../api/onboarding";
 import { Avatar, PROVIDER_LABEL } from "./AccountCard";
+import { ProfileAnswers } from "./ProfileAnswers";
 
 interface ProfileScreenProps {
   user: AuthUser;
   solvedCount: number;
   exerciseCount: number;
+  /** What the learner answered in the first-launch questions, or `null` if they did not. */
+  profile: Onboarding | null;
+  onSaveProfile: (profile: Onboarding) => Promise<void>;
   onSignOut: () => void;
 }
 
 /** The profile of the signed-in account: who it is and how far it has come. */
-export function ProfileScreen({ user, solvedCount, exerciseCount, onSignOut }: ProfileScreenProps) {
+export function ProfileScreen({
+  user,
+  solvedCount,
+  exerciseCount,
+  profile,
+  onSaveProfile,
+  onSignOut,
+}: ProfileScreenProps) {
   return (
     <section className="screen">
       <h2>Profil</h2>
@@ -31,6 +43,7 @@ export function ProfileScreen({ user, solvedCount, exerciseCount, onSignOut }: P
           {solvedCount} / {exerciseCount}
         </p>
       </div>
+      <ProfileAnswers profile={profile} onSave={onSaveProfile} />
       <div>
         <button type="button" className="btn btn-danger" onClick={onSignOut}>
           Se déconnecter

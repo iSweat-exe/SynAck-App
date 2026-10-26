@@ -33,6 +33,7 @@ Règle : **une seule feature « EN COURS » à la fois.** On n'ouvre la suivante
 - [x] **Reste de la synchronisation** : réponses de l'onboarding, brouillons (statut « En cours » sur les exercices, filtre) et série de jours (réelle dans la navbar) dans Supabase, par compte.
 - [x] **Statistiques côté serveur** : XP, pièces, niveau et séries calculés par Supabase (catalogue des difficultés, triggers, table `player_stats`, vue `my_stats`), avec tests pgTAP et tests de cohérence du catalogue.
 - [x] **Exercices difficiles, indices et corrigé** : 5 exercices difficiles (distance d'édition, sac à dos, plus court chemin, ordre des tâches, plus longue sous-suite croissante), 3 indices progressifs par exercice, corrigé commenté débloqué après réussite.
+- [x] **Recommandations d'exercices** d'après l'onboarding (niveau, centres d'intérêt, langages connus, exercices commencés), et réponses modifiables depuis le Profil.
 
 ## EN COURS
 

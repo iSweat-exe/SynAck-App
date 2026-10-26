@@ -18,6 +18,7 @@ import { NavItem } from "./components/NavItem";
 import { PageBackground } from "./components/PageBackground";
 import { OnboardingPage } from "./components/OnboardingPage";
 import { Sidebar, type SidebarItem } from "./components/Sidebar";
+import type { Onboarding } from "./api/onboarding";
 import { useAuth } from "./auth/useAuth";
 import { useEnvironment } from "./environment/useEnvironment";
 import { useDrafts } from "./exercises/useDrafts";
@@ -37,13 +38,19 @@ const noop = () => undefined;
 
 type MainViewId = "exercises" | "protocols";
 
-interface ShellProps {
+interface GateProps {
   user: AuthUser;
   onSignOut: () => void;
 }
 
+interface ShellProps extends GateProps {
+  /** What the learner answered in the first-launch questions, or `null`. */
+  profile: Onboarding | null;
+  onSaveProfile: (profile: Onboarding) => Promise<void>;
+}
+
 /** The application itself. It only exists while someone is signed in: nothing is loaded before. */
-function Shell({ user, onSignOut }: ShellProps) {
+function Shell({ user, profile, onSaveProfile, onSignOut }: ShellProps) {
   const [view, setView] = useState<ViewId>("exercises");
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("appearance");
   const environment = useEnvironment();
@@ -151,6 +158,10 @@ function Shell({ user, onSignOut }: ShellProps) {
       <ExercisesScreen
         exercises={exercises}
         drafts={drafts}
+        profile={profile}
+        onOpenProfile={() => {
+          goTo("profile");
+        }}
         environment={environment}
         onReward={onReward}
         selectedId={exerciseId}
@@ -176,6 +187,8 @@ function Shell({ user, onSignOut }: ShellProps) {
         user={user}
         solvedCount={solvedCount}
         exerciseCount={exerciseCount}
+        profile={profile}
+        onSaveProfile={onSaveProfile}
         onSignOut={onSignOut}
       />
     );
@@ -246,7 +259,7 @@ function Shell({ user, onSignOut }: ShellProps) {
  * Between the sign-in and the application: the questions of the first launch. Skipping them only
  * lasts for this session; a failure to read them never blocks the application.
  */
-function Gate({ user, onSignOut }: ShellProps) {
+function Gate({ user, onSignOut }: GateProps) {
   const onboarding = useOnboarding(user.id);
   const [skipped, setSkipped] = useState(false);
 
@@ -261,7 +274,14 @@ function Gate({ user, onSignOut }: ShellProps) {
       />
     );
   }
-  return <Shell user={user} onSignOut={onSignOut} />;
+  return (
+    <Shell
+      user={user}
+      profile={onboarding.profile}
+      onSaveProfile={onboarding.save}
+      onSignOut={onSignOut}
+    />
+  );
 }
 
 /** What the window shows while the saved session is being checked. */

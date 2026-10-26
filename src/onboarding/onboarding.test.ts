@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { choose, isAnswered, NO_ANSWERS, toProfile, type Answers } from "./answers";
+import { choose, fromProfile, isAnswered, NO_ANSWERS, toProfile, type Answers } from "./answers";
 import { ALLOWED, STEPS } from "./questions";
 
 function step(key: string) {
@@ -100,5 +100,12 @@ describe("toProfile", () => {
 
   it("should accept no known language", () => {
     expect(toProfile({ ...COMPLETE, knownLanguages: [] })?.knownLanguages).toEqual([]);
+  });
+});
+
+describe("fromProfile", () => {
+  it("should give back the answers a profile was made from", () => {
+    const profile = toProfile(COMPLETE);
+    expect(profile === null ? null : fromProfile(profile)).toEqual(COMPLETE);
   });
 });

@@ -1,7 +1,15 @@
 import { useState } from "react";
 import type { Environment } from "../environment/useEnvironment";
+import type { Onboarding } from "../api/onboarding";
 import { draftKey, inProgressIds } from "../exercises/drafts";
-import { distinct, filterExercises, NO_FILTER, type Criteria } from "../exercises/filter";
+import {
+  distinct,
+  filterExercises,
+  isFiltering,
+  NO_FILTER,
+  type Criteria,
+} from "../exercises/filter";
+import { recommend } from "../exercises/recommend";
 import { nextUnsolved } from "../exercises/next";
 import type { Drafts } from "../exercises/useDrafts";
 import type { Exercises } from "../exercises/useExercises";
@@ -11,11 +19,16 @@ import { CatalogFilters } from "./CatalogFilters";
 import { ExerciseList } from "./ExerciseList";
 import { DepthTransition } from "./DepthTransition";
 import { ExerciseSolver } from "./ExerciseSolver";
+import { Recommendations } from "./Recommendations";
 
 interface ExercisesScreenProps {
   exercises: Exercises;
   /** The code the learner wrote, kept while they browse and between launches. */
   drafts: Drafts;
+  /** What the learner answered in the first-launch questions: the recommendations rely on it. */
+  profile: Onboarding | null;
+  /** Opens the profile, where the answers can be given or changed. */
+  onOpenProfile: () => void;
   environment: Environment;
   onOpenEnvironment: () => void;
   /** Called when an exercise is solved for the first time, before the progress is read again. */
@@ -28,6 +41,8 @@ interface ExercisesScreenProps {
 export function ExercisesScreen({
   exercises,
   drafts,
+  profile,
+  onOpenProfile,
   environment,
   onOpenEnvironment,
   onReward,
@@ -102,11 +117,36 @@ export function ExercisesScreen({
   const solvedIds = new Set(solved.map((entry) => entry.exercise));
   const started = inProgressIds(catalog.exercises, solvedIds, drafts.record);
   const visible = filterExercises(catalog.exercises, solvedIds, criteria, started);
+  const open = (id: string) => {
+    navigate(() => {
+      onSelect(id);
+    }, "nav-forward");
+  };
 
   return (
     <DepthTransition key="list">
       <section className="screen exercises-page">
         <h2>Exercices</h2>
+        {!isFiltering(criteria) &&
+          (profile === null ? (
+            <aside className="card recommendations" aria-label="Recommandations">
+              <h3 className="label">Recommandé pour toi</h3>
+              <p className="hints-intro">
+                Réponds à quelques questions sur ton niveau et tes envies : on te suggérera les
+                exercices qui te correspondent.
+              </p>
+              <div>
+                <button type="button" className="btn btn-secondary" onClick={onOpenProfile}>
+                  Répondre aux questions
+                </button>
+              </div>
+            </aside>
+          ) : (
+            <Recommendations
+              items={recommend(profile, catalog.exercises, solvedIds, started)}
+              onOpen={open}
+            />
+          ))}
         <div className="exercises-layout">
           <CatalogFilters
             criteria={criteria}

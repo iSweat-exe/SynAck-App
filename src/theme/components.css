@@ -2417,3 +2417,30 @@ body:has(.shop[open]) {
   gap: 0.35rem;
   justify-items: start;
 }
+
+/* Recommendations, above the list of exercises. */
+
+.recommendations {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* The answers of the first-launch questions, in the profile. */
+
+.profile-answers {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.profile-answers-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.profile-answers-step {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
