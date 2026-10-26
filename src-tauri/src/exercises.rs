@@ -94,3 +94,40 @@ pub fn find(id: &str) -> Result<Exercise, AppError> {
 pub async fn list_exercises() -> Result<Vec<Exercise>, AppError> {
     all()
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::path::Path;
+
+    use super::*;
+
+    /// Every migration, as one text.
+    fn migrations() -> String {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../supabase/migrations");
+        let mut sql = String::new();
+        for entry in fs::read_dir(dir).unwrap() {
+            sql.push_str(&fs::read_to_string(entry.unwrap().path()).unwrap());
+        }
+        sql
+    }
+
+    /// The server computes experience and coins from its own copy of the catalog
+    /// (`catalog_items`): an exercise it does not know earns nothing.
+    #[test]
+    fn every_exercise_should_be_in_the_server_catalog_with_its_difficulty() {
+        let sql = migrations();
+        for exercise in all().unwrap() {
+            let difficulty = match exercise.difficulty {
+                Difficulty::Easy => "easy",
+                Difficulty::Medium => "medium",
+                Difficulty::Hard => "hard",
+            };
+            let row = format!("('exercise', '{}', '{difficulty}')", exercise.id);
+            assert!(
+                sql.contains(&row),
+                "add {row} to catalog_items in a new migration"
+            );
+        }
+    }
+}

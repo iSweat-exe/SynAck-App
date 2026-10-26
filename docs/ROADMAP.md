@@ -31,6 +31,7 @@ Règle : **une seule feature « EN COURS » à la fois.** On n'ouvre la suivante
 
 - [x] **Progression synchronisée avec Supabase, liée au compte** : exercices résolus et protocoles validés dans le projet Supabase (tables en lecture seule, écriture par fonctions, RLS, tests pgTAP), copie locale par compte, envoi en arrière-plan avec reprise hors ligne, renouvellement du jeton d'accès. XP et pièces s'en déduisent.
 - [x] **Reste de la synchronisation** : réponses de l'onboarding, brouillons (statut « En cours » sur les exercices, filtre) et série de jours (réelle dans la navbar) dans Supabase, par compte.
+- [x] **Statistiques côté serveur** : XP, pièces, niveau et séries calculés par Supabase (catalogue des difficultés, triggers, table `player_stats`, vue `my_stats`), avec tests pgTAP et tests de cohérence du catalogue.
 
 ## EN COURS
 
@@ -44,7 +45,7 @@ _Aucune. À choisir par le porteur._
 
 ## Idées (hors périmètre, ne pas commencer)
 
-- Suite de la synchronisation : dépenses de pièces (table côté serveur, avec la boutique), gel de série, indicateur d'état de synchronisation dans l'interface, classement (à juger côté serveur : les réussites sont déclarées par le client).
+- Suite de la synchronisation : afficher les valeurs du serveur dans l'appli (aujourd'hui calculées en local), dépenses de pièces (table côté serveur, avec la boutique), gel de série, indicateur d'état de synchronisation dans l'interface, classement (à juger côté serveur : les réussites sont déclarées par le client).
 
 - Publication : certificat de signature de code Windows et notarisation Apple (plus d'avertissement à la première installation), canal « bêta » qui reçoit aussi les pré-versions.
 - Boutique : rendre les achats possibles (table de dépenses côté Rust, solde = gagné moins dépensé), puis les bonus et thèmes eux-mêmes. La fenêtre et le catalogue existent déjà, rien ne s'achète.
