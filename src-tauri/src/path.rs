@@ -6,6 +6,7 @@
 //! Windows keeps the one new programs will get, and merged with the one the process already has.
 
 use std::ffi::OsString;
+#[cfg(any(windows, test))]
 use std::path::PathBuf;
 
 /// The `PATH` to use now, or `None` to keep the process's own (not Windows, or the registry
