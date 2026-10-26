@@ -1,0 +1,32 @@
+{
+  "id": "shortest_path",
+  "title": "Plus court chemin",
+  "difficulty": "hard",
+  "summary": "Trouve la plus courte distance entre deux villes d'un réseau de routes.",
+  "topics": [
+    "Graphes"
+  ],
+  "statement": "Un réseau de routes relie des villes numérotées de `1` à `n`. Chaque route est **à double sens** et a une **longueur**. Trouve la **plus courte distance** entre une ville de départ et une ville d'arrivée.",
+  "input": "- ligne 1 : `n` (2 ≤ n ≤ 150) et `m` (0 ≤ m ≤ 400), séparés par un espace ;\n- puis `m` lignes : `a b longueur` (deux villes différentes et une longueur de 1 à 20) ;\n- dernière ligne : la ville de départ et la ville d'arrivée, séparées par un espace.",
+  "output": "Un entier : la plus courte distance, ou `-1` si l'arrivée est inaccessible.",
+  "notes": "Deux routes peuvent relier les **mêmes villes** avec des longueurs différentes. Le départ peut être l'arrivée (distance `0`). Essayer tous les chemins possibles est trop lent sur un grand réseau.",
+  "examples": [
+    {
+      "input": "4 3\n1 2 5\n2 3 2\n3 4 1\n1 4\n",
+      "output": "8"
+    },
+    {
+      "input": "4 1\n1 2 3\n3 4\n",
+      "output": "-1"
+    }
+  ],
+  "hints": [
+    "Le plus court chemin vers une ville se construit à partir du plus court chemin vers une ville **voisine**. Garde pour chaque ville la meilleure distance connue depuis le départ (infinie au début, `0` pour le départ).",
+    "À chaque étape, choisis la ville **non traitée** la plus proche du départ : sa distance est définitive, car toutes les longueurs sont positives. C'est l'algorithme de Dijkstra.",
+    "Une fois une ville traitée, regarde chacune de ses routes : si `distance[ville] + longueur` est plus petit que `distance[voisine]`, mets cette dernière à jour. Répète tant qu'une ville atteignable reste à traiter. Si l'arrivée est restée à l'infini, affiche `-1`. Range chaque route **dans les deux sens**."
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn, m = map(int, lines[0].split())\nroutes = [tuple(map(int, lines[1 + k].split())) for k in range(m)]\ndepart, arrivee = map(int, lines[1 + m].split())\n\n# routes contient des triplets (a, b, longueur). Affiche la plus courte distance, ou -1.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst [n, m] = lines[0].split(\" \").map(Number);\nconst routes = [];\nfor (let k = 0; k < m; k++) {\n  routes.push(lines[1 + k].split(\" \").map(Number));\n}\nconst [depart, arrivee] = lines[1 + m].split(\" \").map(Number);\n\n// routes contient des triplets [a, b, longueur]. Affiche la plus courte distance, ou -1.\n"
+  }
+}

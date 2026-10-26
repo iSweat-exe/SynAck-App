@@ -1,0 +1,33 @@
+{
+  "id": "edit_distance",
+  "title": "Distance d'édition",
+  "difficulty": "hard",
+  "summary": "Compte le nombre minimal de modifications pour transformer un mot en un autre.",
+  "topics": [
+    "Chaînes",
+    "Programmation dynamique"
+  ],
+  "statement": "La **distance d'édition** (de Levenshtein) entre deux mots est le **nombre minimal d'opérations** pour transformer le premier en le second. Une opération est : **insérer** une lettre, **supprimer** une lettre, ou **remplacer** une lettre par une autre.\n\nPar exemple, `kitten` devient `sitting` en 3 opérations : `kitten` → `sitten` (remplacer `k` par `s`) → `sittin` (remplacer `e` par `i`) → `sitting` (insérer `g`).",
+  "input": "- ligne 1 : le premier mot ;\n- ligne 2 : le second mot.\n\nChaque mot fait de 0 à 30 lettres minuscules : **une ligne peut être vide**.",
+  "output": "Un entier : la distance d'édition.",
+  "notes": "Essayer toutes les suites d'opérations est bien trop long dès que les mots dépassent quelques lettres. Pense à construire la réponse pour des **débuts** de mots de plus en plus longs.",
+  "examples": [
+    {
+      "input": "kitten\nsitting\n",
+      "output": "3"
+    },
+    {
+      "input": "\nabc\n",
+      "output": "3"
+    }
+  ],
+  "hints": [
+    "Regarde la dernière lettre de chaque mot : soit elles sont égales (rien à payer), soit il faut une opération. Le problème se ramène à des mots **plus courts**.",
+    "Note `d[i][j]` la distance entre les `i` premières lettres du premier mot et les `j` premières du second. Pour `i = 0`, c'est `j` (tout insérer) ; pour `j = 0`, c'est `i` (tout supprimer).",
+    "`d[i][j]` est le **minimum** de trois choix : `d[i-1][j] + 1` (supprimer), `d[i][j-1] + 1` (insérer), `d[i-1][j-1] + coût` (coût 0 si les lettres sont égales, 1 sinon). La réponse est `d[len(a)][len(b)]`. Une seule ligne précédente suffit en mémoire."
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\na = lines[0]\nb = lines[1]\n\n# Affiche la distance d'édition entre a et b.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst a = lines[0];\nconst b = lines[1];\n\n// Affiche la distance d'édition entre a et b.\n"
+  }
+}

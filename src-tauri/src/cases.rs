@@ -5,7 +5,7 @@
 //! the expected output for any input. Because the inputs are unknown in advance, a program that
 //! hard-codes answers cannot pass: it has to implement the actual logic.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 use fastrand::Rng;
@@ -22,7 +22,7 @@ struct Spec {
     solve: fn(&str) -> String,
 }
 
-const SPECS: [Spec; 15] = [
+const SPECS: [Spec; 20] = [
     Spec {
         id: "fibonacci",
         inputs: fibonacci_inputs,
@@ -97,6 +97,31 @@ const SPECS: [Spec; 15] = [
         id: "caesar",
         inputs: caesar_inputs,
         solve: caesar_solve,
+    },
+    Spec {
+        id: "lis",
+        inputs: lis_inputs,
+        solve: lis_solve,
+    },
+    Spec {
+        id: "edit_distance",
+        inputs: edit_distance_inputs,
+        solve: edit_distance_solve,
+    },
+    Spec {
+        id: "knapsack",
+        inputs: knapsack_inputs,
+        solve: knapsack_solve,
+    },
+    Spec {
+        id: "shortest_path",
+        inputs: shortest_path_inputs,
+        solve: shortest_path_solve,
+    },
+    Spec {
+        id: "topological_order",
+        inputs: topological_order_inputs,
+        solve: topological_order_solve,
     },
 ];
 
@@ -578,6 +603,327 @@ fn caesar_solve(input: &str) -> String {
         .collect()
 }
 
+// --- The hard exercises ----------------------------------------------------------------------------
+
+/// The whitespace separated numbers of a line.
+fn parse_numbers(line: &str) -> Vec<usize> {
+    line.split_whitespace()
+        .filter_map(|word| word.parse().ok())
+        .collect()
+}
+
+// --- Longest increasing subsequence: strictly increasing -------------------------------------------
+
+fn lis_inputs(rng: &mut Rng) -> Vec<String> {
+    let mut inputs = vec![
+        "1\n5\n".to_owned(),
+        "5\n3 3 3 3 3\n".to_owned(),
+        "5\n5 4 3 2 1\n".to_owned(),
+        "5\n1 2 3 4 5\n".to_owned(),
+        "8\n10 9 2 5 3 7 101 18\n".to_owned(),
+        "6\n1 3 2 3 4 4\n".to_owned(),
+    ];
+    for _ in 0..5 {
+        let count = rng.usize(1..=30);
+        inputs.push(format!("{count}\n{}\n", numbers_line(rng, count, 20)));
+    }
+    // Long enough for a program that tries every subsequence to give up.
+    inputs.push(format!("800\n{}\n", numbers_line(rng, 800, 1000)));
+    inputs
+}
+
+fn lis_solve(input: &str) -> String {
+    let values = parse_numbers(input.lines().nth(1).unwrap_or_default());
+    let mut best = vec![1_usize; values.len()];
+    for i in 0..values.len() {
+        for j in 0..i {
+            if values[j] < values[i] {
+                best[i] = best[i].max(best[j] + 1);
+            }
+        }
+    }
+    best.into_iter().max().unwrap_or_default().to_string()
+}
+
+// --- Edit distance: insert, delete or replace a letter ---------------------------------------------
+
+fn random_word(rng: &mut Rng, length: usize, alphabet: u8) -> String {
+    (0..length)
+        .map(|_| char::from(b'a' + rng.u8(0..alphabet)))
+        .collect()
+}
+
+fn edit_distance_inputs(rng: &mut Rng) -> Vec<String> {
+    let mut inputs = vec![
+        "kitten\nsitting\n".to_owned(),
+        "\nabc\n".to_owned(),
+        "abc\n\n".to_owned(),
+        "\n\n".to_owned(),
+        "same\nsame\n".to_owned(),
+        "a\nb\n".to_owned(),
+    ];
+    for _ in 0..6 {
+        let (first, second) = (rng.usize(0..=12), rng.usize(0..=12));
+        inputs.push(format!(
+            "{}\n{}\n",
+            random_word(rng, first, 3),
+            random_word(rng, second, 3)
+        ));
+    }
+    // Long enough for a program that tries every sequence of operations to give up.
+    let (first, second) = (rng.usize(25..=30), rng.usize(25..=30));
+    inputs.push(format!(
+        "{}\n{}\n",
+        random_word(rng, first, 4),
+        random_word(rng, second, 4)
+    ));
+    inputs
+}
+
+fn edit_distance_solve(input: &str) -> String {
+    let mut lines = input.split('\n');
+    let first: Vec<char> = lines.next().unwrap_or_default().chars().collect();
+    let second: Vec<char> = lines.next().unwrap_or_default().chars().collect();
+    let mut previous: Vec<usize> = (0..=second.len()).collect();
+    for (i, a) in first.iter().enumerate() {
+        let mut current = vec![i + 1];
+        for (j, b) in second.iter().enumerate() {
+            let cost = usize::from(a != b);
+            current.push(
+                (previous[j + 1] + 1)
+                    .min(current[j] + 1)
+                    .min(previous[j] + cost),
+            );
+        }
+        previous = current;
+    }
+    previous[second.len()].to_string()
+}
+
+// --- Knapsack: the best value in a bag that holds a limited weight ---------------------------------
+
+fn random_knapsack(rng: &mut Rng, items: usize, capacity: usize, max_weight: usize) -> String {
+    let mut lines = vec![format!("{items} {capacity}")];
+    for _ in 0..items {
+        lines.push(format!(
+            "{} {}",
+            rng.usize(1..=max_weight),
+            rng.usize(1..=100)
+        ));
+    }
+    lines.join("\n") + "\n"
+}
+
+fn knapsack_inputs(rng: &mut Rng) -> Vec<String> {
+    let mut inputs = vec![
+        // The classic: the best choice is not the most profitable item per kilo.
+        "3 50\n10 60\n20 100\n30 120\n".to_owned(),
+        // No item at all.
+        "0 10\n".to_owned(),
+        // Nothing fits.
+        "2 5\n6 10\n7 20\n".to_owned(),
+        // One item that fits exactly.
+        "1 10\n10 7\n".to_owned(),
+        // An item may be taken only once.
+        "2 10\n5 10\n20 1\n".to_owned(),
+    ];
+    for _ in 0..5 {
+        let (items, capacity) = (rng.usize(1..=8), rng.usize(1..=40));
+        inputs.push(random_knapsack(rng, items, capacity, 20));
+    }
+    // Too many combinations for a program that tries them all.
+    let capacity = rng.usize(100..=200);
+    inputs.push(random_knapsack(rng, 30, capacity, 60));
+    inputs
+}
+
+fn knapsack_solve(input: &str) -> String {
+    let mut lines = input.lines();
+    let &[items, capacity] = parse_numbers(lines.next().unwrap_or_default()).as_slice() else {
+        return String::new();
+    };
+    let mut best = vec![0_usize; capacity + 1];
+    for line in lines.take(items) {
+        let &[weight, value] = parse_numbers(line).as_slice() else {
+            continue;
+        };
+        for room in (weight..=capacity).rev() {
+            best[room] = best[room].max(best[room - weight] + value);
+        }
+    }
+    best[capacity].to_string()
+}
+
+// --- Shortest path: Dijkstra on two-way roads ------------------------------------------------------
+
+fn random_roads(rng: &mut Rng, cities: usize, roads: usize) -> String {
+    let mut lines = vec![format!("{cities} {roads}")];
+    for _ in 0..roads {
+        let from = rng.usize(1..=cities);
+        let mut to = rng.usize(1..=cities);
+        while to == from {
+            to = rng.usize(1..=cities);
+        }
+        lines.push(format!("{from} {to} {}", rng.usize(1..=20)));
+    }
+    lines.push(format!(
+        "{} {}",
+        rng.usize(1..=cities),
+        rng.usize(1..=cities)
+    ));
+    lines.join("\n") + "\n"
+}
+
+fn shortest_path_inputs(rng: &mut Rng) -> Vec<String> {
+    let mut inputs = vec![
+        "4 3\n1 2 5\n2 3 2\n3 4 1\n1 4\n".to_owned(),
+        // The arrival cannot be reached.
+        "4 1\n1 2 3\n3 4\n".to_owned(),
+        // The start is the arrival.
+        "3 1\n1 2 4\n2 2\n".to_owned(),
+        // The shortest way is not the one with the fewest roads.
+        "4 5\n1 2 1\n2 4 10\n1 3 4\n3 4 3\n1 4 20\n1 4\n".to_owned(),
+        // Two roads between the same cities.
+        "2 2\n1 2 9\n1 2 3\n1 2\n".to_owned(),
+        // No road at all.
+        "3 0\n1 3\n".to_owned(),
+    ];
+    for _ in 0..5 {
+        let (cities, roads) = (rng.usize(2..=10), rng.usize(0..=15));
+        inputs.push(random_roads(rng, cities, roads));
+    }
+    inputs.push(random_roads(rng, 150, 400));
+    inputs
+}
+
+fn shortest_path_solve(input: &str) -> String {
+    let mut lines = input.lines();
+    let &[cities, roads] = parse_numbers(lines.next().unwrap_or_default()).as_slice() else {
+        return String::new();
+    };
+    let mut graph = vec![Vec::new(); cities + 1];
+    for line in lines.by_ref().take(roads) {
+        let &[from, to, length] = parse_numbers(line).as_slice() else {
+            continue;
+        };
+        graph[from].push((to, length));
+        graph[to].push((from, length));
+    }
+    let &[start, goal] = parse_numbers(lines.next().unwrap_or_default()).as_slice() else {
+        return String::new();
+    };
+
+    let mut distance = vec![usize::MAX; cities + 1];
+    let mut done = vec![false; cities + 1];
+    distance[start] = 0;
+    while let Some(city) = (1..=cities)
+        .filter(|&city| !done[city] && distance[city] != usize::MAX)
+        .min_by_key(|&city| distance[city])
+    {
+        done[city] = true;
+        for &(next, length) in &graph[city] {
+            distance[next] = distance[next].min(distance[city] + length);
+        }
+    }
+    if distance[goal] == usize::MAX {
+        "-1".to_owned()
+    } else {
+        distance[goal].to_string()
+    }
+}
+
+// --- Topological order: the smallest available task at each step -----------------------------------
+
+fn edges_text(tasks: usize, edges: &[(usize, usize)]) -> String {
+    let mut lines = vec![format!("{tasks} {}", edges.len())];
+    lines.extend(edges.iter().map(|(a, b)| format!("{a} {b}")));
+    lines.join("\n") + "\n"
+}
+
+/// A random order of the tasks, and edges that all go forward in it: no cycle is possible.
+fn forward_edges(rng: &mut Rng, tasks: usize, chance: f64) -> (Vec<usize>, Vec<(usize, usize)>) {
+    let mut order: Vec<usize> = (1..=tasks).collect();
+    rng.shuffle(&mut order);
+    let mut edges = Vec::new();
+    for i in 0..tasks {
+        for j in (i + 1)..tasks {
+            if rng.f64() < chance {
+                edges.push((order[i], order[j]));
+            }
+        }
+    }
+    rng.shuffle(&mut edges);
+    (order, edges)
+}
+
+fn topological_order_inputs(rng: &mut Rng) -> Vec<String> {
+    let mut inputs = vec![
+        // The smallest available task is chosen again at each step.
+        "4 2\n3 1\n4 2\n".to_owned(),
+        // No constraint.
+        "3 0\n".to_owned(),
+        // A cycle.
+        "3 3\n1 2\n2 3\n3 1\n".to_owned(),
+        "1 0\n".to_owned(),
+        // A constraint that is repeated.
+        "2 2\n1 2\n1 2\n".to_owned(),
+        "5 4\n5 4\n4 3\n3 2\n2 1\n".to_owned(),
+    ];
+    for _ in 0..4 {
+        let tasks = rng.usize(2..=8);
+        let (_, edges) = forward_edges(rng, tasks, 0.3);
+        inputs.push(edges_text(tasks, &edges));
+    }
+    // A chain closed on itself: a cycle for sure.
+    for _ in 0..2 {
+        let tasks = rng.usize(3..=8);
+        let (order, mut edges) = forward_edges(rng, tasks, 0.0);
+        edges.extend(order.windows(2).map(|pair| (pair[0], pair[1])));
+        edges.push((order[tasks - 1], order[0]));
+        rng.shuffle(&mut edges);
+        inputs.push(edges_text(tasks, &edges));
+    }
+    let (_, edges) = forward_edges(rng, 40, 0.08);
+    inputs.push(edges_text(40, &edges));
+    inputs
+}
+
+fn topological_order_solve(input: &str) -> String {
+    let mut lines = input.lines();
+    let &[tasks, edges] = parse_numbers(lines.next().unwrap_or_default()).as_slice() else {
+        return String::new();
+    };
+    let mut after = vec![Vec::new(); tasks + 1];
+    let mut waiting = vec![0_usize; tasks + 1];
+    for line in lines.take(edges) {
+        let &[before, later] = parse_numbers(line).as_slice() else {
+            continue;
+        };
+        after[before].push(later);
+        waiting[later] += 1;
+    }
+    let mut ready: BTreeSet<usize> = (1..=tasks).filter(|&task| waiting[task] == 0).collect();
+    let mut order = Vec::new();
+    while let Some(task) = ready.pop_first() {
+        order.push(task);
+        for &follower in &after[task] {
+            waiting[follower] -= 1;
+            if waiting[follower] == 0 {
+                ready.insert(follower);
+            }
+        }
+    }
+    if order.len() == tasks {
+        order
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(" ")
+    } else {
+        "IMPOSSIBLE".to_owned()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -607,6 +953,57 @@ mod tests {
         assert_eq!(
             tips_solve("2\n18 12\n45 15\n"),
             "Total des pourboires : 8.91 €"
+        );
+    }
+
+    #[test]
+    fn lis_solve_should_not_count_equal_values_when_the_sequence_must_strictly_increase() {
+        assert_eq!(lis_solve("6\n1 3 2 3 4 4\n"), "4");
+    }
+
+    #[test]
+    fn edit_distance_solve_should_count_three_operations_when_turning_kitten_into_sitting() {
+        assert_eq!(edit_distance_solve("kitten\nsitting\n"), "3");
+    }
+
+    #[test]
+    fn edit_distance_solve_should_be_the_other_length_when_a_word_is_empty() {
+        assert_eq!(edit_distance_solve("\nabc\n"), "3");
+    }
+
+    #[test]
+    fn knapsack_solve_should_not_take_the_most_profitable_item_per_kilo_when_it_is_worse() {
+        assert_eq!(knapsack_solve("3 50\n10 60\n20 100\n30 120\n"), "220");
+    }
+
+    #[test]
+    fn knapsack_solve_should_take_an_item_only_once() {
+        assert_eq!(knapsack_solve("2 10\n5 10\n20 1\n"), "10");
+    }
+
+    #[test]
+    fn shortest_path_solve_should_prefer_the_shortest_way_over_the_fewest_roads() {
+        assert_eq!(
+            shortest_path_solve("4 5\n1 2 1\n2 4 10\n1 3 4\n3 4 3\n1 4 20\n1 4\n"),
+            "7"
+        );
+    }
+
+    #[test]
+    fn shortest_path_solve_should_be_minus_one_when_the_arrival_cannot_be_reached() {
+        assert_eq!(shortest_path_solve("4 1\n1 2 3\n3 4\n"), "-1");
+    }
+
+    #[test]
+    fn topological_order_solve_should_pick_the_smallest_available_task_at_each_step() {
+        assert_eq!(topological_order_solve("4 2\n3 1\n4 2\n"), "3 1 4 2");
+    }
+
+    #[test]
+    fn topological_order_solve_should_be_impossible_when_the_constraints_form_a_cycle() {
+        assert_eq!(
+            topological_order_solve("3 3\n1 2\n2 3\n3 1\n"),
+            "IMPOSSIBLE"
         );
     }
 

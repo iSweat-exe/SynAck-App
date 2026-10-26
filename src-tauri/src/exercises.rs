@@ -47,7 +47,7 @@ pub struct Exercise {
     pub starters: BTreeMap<String, String>,
 }
 
-const SOURCES: [&str; 15] = [
+const SOURCES: [&str; 20] = [
     include_str!("../exercises/fibonacci/exercise.json"),
     include_str!("../exercises/dict_sum/exercise.json"),
     include_str!("../exercises/list_extend/exercise.json"),
@@ -63,6 +63,11 @@ const SOURCES: [&str; 15] = [
     include_str!("../exercises/dedupe/exercise.json"),
     include_str!("../exercises/change_coins/exercise.json"),
     include_str!("../exercises/caesar/exercise.json"),
+    include_str!("../exercises/lis/exercise.json"),
+    include_str!("../exercises/edit_distance/exercise.json"),
+    include_str!("../exercises/knapsack/exercise.json"),
+    include_str!("../exercises/shortest_path/exercise.json"),
+    include_str!("../exercises/topological_order/exercise.json"),
 ];
 
 /// Parses the embedded catalog, in display order.
