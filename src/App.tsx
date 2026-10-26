@@ -1,7 +1,8 @@
-import { useState, ViewTransition, type ReactNode } from "react";
+import { useEffect, useState, ViewTransition, type ReactNode } from "react";
 import { MotionConfig } from "motion/react";
 import type { AuthUser } from "./api/auth";
 import { AccountCard } from "./components/AccountCard";
+import { CommandPalette } from "./components/CommandPalette";
 import { ExercisesScreen } from "./components/ExercisesScreen";
 import { LoginPage } from "./components/LoginPage";
 import { Breadcrumb, type Crumb } from "./components/Breadcrumb";
@@ -18,6 +19,7 @@ import { NavItem } from "./components/NavItem";
 import { PageBackground } from "./components/PageBackground";
 import { OnboardingPage } from "./components/OnboardingPage";
 import { Sidebar, type SidebarItem } from "./components/Sidebar";
+import type { Onboarding } from "./api/onboarding";
 import { useAuth } from "./auth/useAuth";
 import { useEnvironment } from "./environment/useEnvironment";
 import { useDrafts } from "./exercises/useDrafts";
@@ -27,6 +29,7 @@ import { PROTOCOLS, findProtocol } from "./protocols/catalog";
 import { useValidatedProtocols } from "./protocols/useValidatedProtocols";
 import { useOnboarding } from "./onboarding/useOnboarding";
 import { useUpdater } from "./updates/useUpdater";
+import type { SearchTarget } from "./search/search";
 import { navigate } from "./transitions";
 import { totalCoins, totalXp, type Gain, type Reward } from "./xp";
 
@@ -37,13 +40,19 @@ const noop = () => undefined;
 
 type MainViewId = "exercises" | "protocols";
 
-interface ShellProps {
+interface GateProps {
   user: AuthUser;
   onSignOut: () => void;
 }
 
+interface ShellProps extends GateProps {
+  /** What the learner answered in the first-launch questions, or `null`. */
+  profile: Onboarding | null;
+  onSaveProfile: (profile: Onboarding) => Promise<void>;
+}
+
 /** The application itself. It only exists while someone is signed in: nothing is loaded before. */
-function Shell({ user, onSignOut }: ShellProps) {
+function Shell({ user, profile, onSaveProfile, onSignOut }: ShellProps) {
   const [view, setView] = useState<ViewId>("exercises");
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("appearance");
   const environment = useEnvironment();
@@ -57,8 +66,41 @@ function Shell({ user, onSignOut }: ShellProps) {
   // The reward just earned. It is set before the progress is read again, so that the navbar knows a
   // celebration is coming when the new totals arrive.
   const [gain, setGain] = useState<Gain | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Ctrl K (Cmd K on a Mac) opens the search, or closes it when it is already open.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
   const onReward = (reward: Reward) => {
     setGain((previous) => ({ id: (previous?.id ?? 0) + 1, ...reward }));
+  };
+
+  // A result of the search: an exercise or a protocol slides in, a page is reached sideways.
+  const openFromSearch = (target: SearchTarget) => {
+    setSearchOpen(false);
+    navigate(
+      () => {
+        setExerciseId(target.type === "exercise" ? target.id : null);
+        setProtocolId(target.type === "protocol" ? target.id : null);
+        if (target.type === "exercise") setView("exercises");
+        else if (target.type === "protocol") setView("protocols");
+        else {
+          setView(target.view);
+          if (target.section !== undefined) setSettingsSection(target.section);
+        }
+      },
+      target.type === "page" ? undefined : "nav-forward",
+    );
   };
 
   // Moving between sections is lateral: a short fade, no slide, which would imply a direction.
@@ -151,6 +193,10 @@ function Shell({ user, onSignOut }: ShellProps) {
       <ExercisesScreen
         exercises={exercises}
         drafts={drafts}
+        profile={profile}
+        onOpenProfile={() => {
+          goTo("profile");
+        }}
         environment={environment}
         onReward={onReward}
         selectedId={exerciseId}
@@ -176,6 +222,8 @@ function Shell({ user, onSignOut }: ShellProps) {
         user={user}
         solvedCount={solvedCount}
         exerciseCount={exerciseCount}
+        profile={profile}
+        onSaveProfile={onSaveProfile}
         onSignOut={onSignOut}
       />
     );
@@ -228,6 +276,9 @@ function Shell({ user, onSignOut }: ShellProps) {
             xp={totalXp(finished)}
             coins={totalCoins(finished)}
             streak={streak}
+            onOpenSearch={() => {
+              setSearchOpen(true);
+            }}
             gain={gain}
             updater={updater}
           />
@@ -238,6 +289,14 @@ function Shell({ user, onSignOut }: ShellProps) {
           </ViewTransition>
         </main>
       </div>
+      <CommandPalette
+        open={searchOpen}
+        exercises={exercises.catalog.status === "ready" ? exercises.catalog.exercises : []}
+        onSelect={openFromSearch}
+        onClose={() => {
+          setSearchOpen(false);
+        }}
+      />
     </div>
   );
 }
@@ -246,7 +305,7 @@ function Shell({ user, onSignOut }: ShellProps) {
  * Between the sign-in and the application: the questions of the first launch. Skipping them only
  * lasts for this session; a failure to read them never blocks the application.
  */
-function Gate({ user, onSignOut }: ShellProps) {
+function Gate({ user, onSignOut }: GateProps) {
   const onboarding = useOnboarding(user.id);
   const [skipped, setSkipped] = useState(false);
 
@@ -261,7 +320,14 @@ function Gate({ user, onSignOut }: ShellProps) {
       />
     );
   }
-  return <Shell user={user} onSignOut={onSignOut} />;
+  return (
+    <Shell
+      user={user}
+      profile={onboarding.profile}
+      onSaveProfile={onboarding.save}
+      onSignOut={onSignOut}
+    />
+  );
 }
 
 /** What the window shows while the saved session is being checked. */

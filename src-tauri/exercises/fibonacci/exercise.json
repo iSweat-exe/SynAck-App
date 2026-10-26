@@ -20,6 +20,11 @@
       "output": "0"
     }
   ],
+  "hints": [
+    "Chaque terme dépend des deux précédents : il te faut garder en mémoire **deux valeurs** à la fois.",
+    "Pars de `a = 0` et `b = 1`. À chaque tour de boucle, tu notes `a`, puis tu fais avancer le couple : `a` prend la valeur de `b`, et `b` devient l'ancienne somme `a + b`.",
+    "Remplis une liste en répétant `n` fois : ajouter `a`, puis `a, b = b, a + b`. À la fin, assemble la liste avec des espaces. Pour `n = 1`, la sortie est simplement `0`."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\n\n# Affiche les n premiers termes, séparés par des espaces.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\n\n// Affiche les n premiers termes, séparés par des espaces.\n"

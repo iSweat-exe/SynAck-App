@@ -174,6 +174,20 @@ impl ProgressStore {
 }
 
 impl ProgressStore {
+    /// Whether this account solved the exercise, in any language.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the query fails.
+    pub fn is_solved(&self, user_id: &str, exercise: &str) -> Result<bool, AppError> {
+        let count: i64 = self.lock().query_row(
+            "SELECT COUNT(*) FROM solved WHERE user_id = ?1 AND exercise = ?2",
+            (user_id, exercise),
+            |row| row.get(0),
+        )?;
+        Ok(count > 0)
+    }
+
     /// The ids of the protocols whose quiz this account passed, oldest first.
     ///
     /// # Errors

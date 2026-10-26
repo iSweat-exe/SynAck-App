@@ -21,6 +21,11 @@
       "output": "2: 1\n1: 1"
     }
   ],
+  "hints": [
+    "Commence toujours par la plus grande pièce possible : avec ces pièces, c'est ce qui donne le moins de pièces.",
+    "Pour chaque pièce, de `50` à `1` : le nombre de pièces utilisées est `reste // pièce`, et le reste diminue d'autant.",
+    "Pour chaque pièce, calcule `nombre = reste // pièce`, puis `reste = reste - nombre * pièce`. N'affiche une ligne `pièce: nombre` que si `nombre > 0`."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nsomme = int(lines[0])\n\n# Affiche une ligne « pièce: nombre » par pièce utilisée.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst somme = Number(lines[0]);\n\n// Affiche une ligne « pièce: nombre » par pièce utilisée.\n"

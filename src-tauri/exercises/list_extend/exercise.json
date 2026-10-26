@@ -20,6 +20,11 @@
       "output": "7 8\n2"
     }
   ],
+  "hints": [
+    "Une ligne vide veut dire une liste vide. Attention : découper une chaîne vide avec un séparateur explicite donne une liste avec **un** élément vide.",
+    "Convertis chaque morceau en entier, puis ajoute les éléments de la deuxième liste à la fin de la première avec `extend` (Python) ou `...` (JavaScript).",
+    "Affiche la liste finale sur la première ligne (assemblée par des espaces) et sa longueur sur la seconde. Si la liste est vide, la première ligne est vide mais la seconde vaut `0`."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\ndepart = lines[0]  # texte de la ligne 1, ex. \"1 2 3\"\najouts = lines[1]  # texte de la ligne 2\n\n# Transforme ces textes en listes d'entiers, ajoute, puis affiche.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst depart = lines[0]; // texte de la ligne 1, ex. \"1 2 3\"\nconst ajouts = lines[1]; // texte de la ligne 2\n\n// Transforme ces textes en tableaux de nombres, ajoute, puis affiche.\n"

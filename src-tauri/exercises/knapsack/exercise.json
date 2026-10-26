@@ -1,0 +1,33 @@
+{
+  "id": "knapsack",
+  "title": "Sac à dos",
+  "difficulty": "hard",
+  "summary": "Choisis des objets pour emporter la plus grande valeur dans un sac limité.",
+  "topics": [
+    "Programmation dynamique",
+    "Listes"
+  ],
+  "statement": "Tu as un sac qui supporte un **poids maximal**. Chaque objet a un poids et une valeur, et tu ne peux le prendre qu'**une seule fois** (ou pas du tout). Trouve la **valeur totale maximale** que tu peux emporter.",
+  "input": "- ligne 1 : `n` (0 ≤ n ≤ 30) et la `capacité` du sac (1 ≤ capacité ≤ 200), séparés par un espace ;\n- puis `n` lignes : le `poids` (1 à 60) et la `valeur` (1 à 100) d'un objet, séparés par un espace.",
+  "output": "Un entier : la valeur maximale.",
+  "notes": "Prendre d'abord les objets les plus rentables (valeur / poids) **ne donne pas toujours** la meilleure réponse. Avec `n` = 30, essayer toutes les combinaisons est impossible dans le temps imparti (plus d'un milliard).",
+  "examples": [
+    {
+      "input": "3 50\n10 60\n20 100\n30 120\n",
+      "output": "220"
+    },
+    {
+      "input": "2 5\n6 10\n7 20\n",
+      "output": "0"
+    }
+  ],
+  "hints": [
+    "Pour chaque objet, il n'y a que deux choix : le prendre ou le laisser. Mais essayer toutes les combinaisons explose vite (2 puissance 30).",
+    "Note `meilleur[c]` la valeur maximale possible avec un sac de capacité `c`. Au début, `meilleur` vaut `0` partout. Traite les objets un par un.",
+    "Pour un objet (poids `p`, valeur `v`), mets à jour chaque capacité `c` de la **plus grande à la plus petite** (jusqu'à `p`) : `meilleur[c] = max(meilleur[c], meilleur[c - p] + v)`. Parcourir dans ce sens évite de prendre l'objet deux fois. La réponse est `meilleur[capacité]`."
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn, capacite = map(int, lines[0].split())\nobjets = [tuple(map(int, lines[1 + k].split())) for k in range(n)]\n\n# objets contient des paires (poids, valeur). Affiche la valeur maximale.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst [n, capacite] = lines[0].split(\" \").map(Number);\nconst objets = [];\nfor (let k = 0; k < n; k++) {\n  objets.push(lines[1 + k].split(\" \").map(Number));\n}\n\n// objets contient des paires [poids, valeur]. Affiche la valeur maximale.\n"
+  }
+}

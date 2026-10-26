@@ -20,6 +20,11 @@
       "output": "kiwi: 1"
     }
   ],
+  "hints": [
+    "Un dictionnaire est fait pour ça : la clé est le mot, la valeur est son nombre d'apparitions.",
+    "Pour chaque mot : s'il est déjà dans le dictionnaire, ajoute 1 ; sinon, mets-le à 1 (`dico.get(mot, 0) + 1` en Python, `(dico[mot] ?? 0) + 1` en JavaScript).",
+    "Trie les clés par ordre alphabétique (`sorted(dico)` / `Object.keys(dico).sort()`) et affiche une ligne `mot: nombre` pour chacune."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nmots = lines[0].split()\n\n# Compte les mots, puis affiche une ligne « mot: nombre » par mot,\n# dans l'ordre alphabétique.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst mots = lines[0].split(\" \");\n\n// Compte les mots, puis affiche une ligne « mot: nombre » par mot,\n// dans l'ordre alphabétique.\n"

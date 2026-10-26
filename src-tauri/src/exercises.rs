@@ -43,11 +43,14 @@ pub struct Exercise {
     #[serde(default)]
     pub notes: Option<String>,
     pub examples: Vec<Example>,
+    /// Three hints, from the lightest to the most precise. The interface shows them one at a time.
+    #[serde(default)]
+    pub hints: Vec<String>,
     /// Code shown in the editor, by language id (see `languages.json`).
     pub starters: BTreeMap<String, String>,
 }
 
-const SOURCES: [&str; 15] = [
+const SOURCES: [&str; 20] = [
     include_str!("../exercises/fibonacci/exercise.json"),
     include_str!("../exercises/dict_sum/exercise.json"),
     include_str!("../exercises/list_extend/exercise.json"),
@@ -63,6 +66,11 @@ const SOURCES: [&str; 15] = [
     include_str!("../exercises/dedupe/exercise.json"),
     include_str!("../exercises/change_coins/exercise.json"),
     include_str!("../exercises/caesar/exercise.json"),
+    include_str!("../exercises/lis/exercise.json"),
+    include_str!("../exercises/edit_distance/exercise.json"),
+    include_str!("../exercises/knapsack/exercise.json"),
+    include_str!("../exercises/shortest_path/exercise.json"),
+    include_str!("../exercises/topological_order/exercise.json"),
 ];
 
 /// Parses the embedded catalog, in display order.
@@ -127,6 +135,20 @@ mod tests {
             assert!(
                 sql.contains(&row),
                 "add {row} to catalog_items in a new migration"
+            );
+        }
+    }
+
+    #[test]
+    fn every_exercise_should_have_three_different_hints() {
+        for exercise in all().unwrap() {
+            assert_eq!(exercise.hints.len(), 3, "{}: three hints", exercise.id);
+            let distinct: std::collections::BTreeSet<_> = exercise.hints.iter().collect();
+            assert_eq!(distinct.len(), 3, "{}: the hints differ", exercise.id);
+            assert!(
+                exercise.hints.iter().all(|hint| !hint.trim().is_empty()),
+                "{}: no empty hint",
+                exercise.id
             );
         }
     }

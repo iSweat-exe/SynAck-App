@@ -20,6 +20,11 @@
       "output": "5"
     }
   ],
+  "hints": [
+    "Un ensemble (`set`) retire les doublons, mais ne garantit pas l'ordre à lui seul : ne t'y fie pas seul.",
+    "Garde une liste de résultat et un ensemble des valeurs déjà vues. Pour chaque nombre : s'il n'est pas dans l'ensemble, ajoute-le aux deux.",
+    "Parcours la liste d'origine dans l'ordre et ne conserve que la **première** apparition de chaque nombre. Affiche la liste de résultat, séparée par des espaces."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nnombres = lines[0].split()\n\n# Affiche chaque nombre une seule fois, dans l'ordre d'apparition.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst nombres = lines[0].split(\" \");\n\n// Affiche chaque nombre une seule fois, dans l'ordre d'apparition.\n"

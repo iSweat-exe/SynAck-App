@@ -32,6 +32,10 @@ Règle : **une seule feature « EN COURS » à la fois.** On n'ouvre la suivante
 - [x] **Progression synchronisée avec Supabase, liée au compte** : exercices résolus et protocoles validés dans le projet Supabase (tables en lecture seule, écriture par fonctions, RLS, tests pgTAP), copie locale par compte, envoi en arrière-plan avec reprise hors ligne, renouvellement du jeton d'accès. XP et pièces s'en déduisent.
 - [x] **Reste de la synchronisation** : réponses de l'onboarding, brouillons (statut « En cours » sur les exercices, filtre) et série de jours (réelle dans la navbar) dans Supabase, par compte.
 - [x] **Statistiques côté serveur** : XP, pièces, niveau et séries calculés par Supabase (catalogue des difficultés, triggers, table `player_stats`, vue `my_stats`), avec tests pgTAP et tests de cohérence du catalogue.
+- [x] **Exercices difficiles, indices et corrigé** : 5 exercices difficiles (distance d'édition, sac à dos, plus court chemin, ordre des tâches, plus longue sous-suite croissante), 3 indices progressifs par exercice, corrigé commenté débloqué après réussite.
+- [x] **Recommandations d'exercices** d'après l'onboarding (niveau, centres d'intérêt, langages connus, exercices commencés), et réponses modifiables depuis le Profil.
+- [x] **Recherche globale (Ctrl K)** : exercices, protocoles et pages, au clavier.
+- [x] **Tests de l'interface dans un navigateur** (Playwright, faux backend Tauri, 24 scénarios : connexion et questions, exercices, indices, brouillons, corrigé, série, recherche, profil, thème), dans la CI.
 
 ## EN COURS
 
@@ -39,7 +43,7 @@ _Aucune. À choisir par le porteur._
 
 ## À venir (proposition, dans l'ordre)
 
-- [ ] **Plus d'exercices** : en ajouter (voir « Ajouter un exercice » dans `CLAUDE.md`), des plus faciles aux plus difficiles.
+- [ ] **Plus d'exercices** : en ajouter (voir « Ajouter un exercice » dans `CLAUDE.md`), pour que chaque thème ait une rampe de facile à difficile.
 - [ ] **Autres langages dans les exercices** : Go, Rust, puis C et C++ (le moteur sait déjà les exécuter).
 - [ ] **Désactiver le fournisseur e-mail** du projet Supabase si l'appli reste OAuth uniquement (réglage du tableau de bord).
 
@@ -49,5 +53,5 @@ _Aucune. À choisir par le porteur._
 
 - Publication : certificat de signature de code Windows et notarisation Apple (plus d'avertissement à la première installation), canal « bêta » qui reçoit aussi les pré-versions.
 - Boutique : rendre les achats possibles (table de dépenses côté Rust, solde = gagné moins dépensé), puis les bonus et thèmes eux-mêmes. La fenêtre et le catalogue existent déjà, rien ne s'achète.
-- Navbar, en haut à droite (maquettes grisées déjà posées, seul le bouton de thème marche) : recherche globale (Ctrl K), pièces (monnaie gagnée en résolvant, dépensée dans les bonus), bonus (menu qui regroupe ceux que le joueur gagne : double XP, gel de série...), notifications. Sidebar : sections Cours et Administration. Autres idées : objectif du jour, aide et raccourcis clavier, bouton « Continuer » vers le prochain exercice non résolu.
+- Navbar, en haut à droite (maquettes grisées déjà posées, seul le bouton de thème marche) : pièces (monnaie gagnée en résolvant, dépensée dans les bonus), bonus (menu qui regroupe ceux que le joueur gagne : double XP, gel de série...), notifications. Sidebar : sections Cours et Administration. Autres idées : objectif du jour, aide et raccourcis clavier, bouton « Continuer » vers le prochain exercice non résolu.
 - Cours et parcours d'apprentissage, indices progressifs, révision espacée SM-2, badges, séries, classement, protocoles en plus (WebSocket, SMTP, FTP, QUIC...), quiz sur les protocoles.

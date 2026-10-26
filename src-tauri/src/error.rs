@@ -19,6 +19,8 @@ pub enum AppError {
     QuizMalformed,
     #[error("Les réponses du questionnaire sont incomplètes ou invalides.")]
     OnboardingInvalid,
+    #[error("Résous l'exercice pour voir son corrigé.")]
+    SolutionLocked,
     #[error("Le code est trop long pour être un exercice de ce niveau.")]
     CodeTooLong,
     #[error("Les données des langages sont invalides : {0}")]

@@ -69,3 +69,15 @@ export function toProfile(answers: Answers): Onboarding | null {
     styles,
   };
 }
+
+/** The answers as the questions hold them, from a profile kept earlier (to edit it). */
+export function fromProfile(profile: Onboarding): Answers {
+  return {
+    level: [profile.level],
+    goals: profile.goals,
+    knownLanguages: profile.knownLanguages,
+    motivation: [profile.motivation],
+    weeklyTime: [profile.weeklyTime],
+    styles: profile.styles,
+  };
+}

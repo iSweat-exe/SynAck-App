@@ -1,8 +1,9 @@
 name: CI
 
 # The same check as on a developer's machine (`npm run check`: SemVer files, types, lint, format,
-# front tests, rustfmt, clippy, Rust tests), on Windows and Linux. "CI gate" is the only check that
-# branch protection needs to require.
+# front tests, rustfmt, clippy, Rust tests), on Windows and Linux, plus the tests of the interface
+# in a browser (`npm run test:e2e`). "CI gate" is the only check that branch protection needs to
+# require.
 
 on:
   pull_request:
@@ -61,15 +62,36 @@ jobs:
       - name: Check
         run: npm run check
 
+  # The interface in a real browser, with the Rust side replaced by a fake backend (see `e2e/`).
+  e2e:
+    name: Interface (browser)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Test the interface
+        run: npm run test:e2e
+
   gate:
     name: CI gate
-    needs: check
+    needs: [check, e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Every check passed
         run: |
-          if [ "${{ needs.check.result }}" != "success" ]; then
-            echo "::error::A check failed or was cancelled (${{ needs.check.result }})."
+          if [ "${{ needs.check.result }}" != "success" ] || [ "${{ needs.e2e.result }}" != "success" ]; then
+            echo "::error::A check failed or was cancelled (check: ${{ needs.check.result }}, interface: ${{ needs.e2e.result }})."
             exit 1
           fi

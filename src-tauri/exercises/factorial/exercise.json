@@ -21,6 +21,11 @@
       "output": "1"
     }
   ],
+  "hints": [
+    "`n!` est un produit : tu multiplies des nombres un par un. Quelle valeur de départ ne change pas un produit ?",
+    "Démarre un résultat à `1`, puis multiplie-le successivement par `2`, `3`, … jusqu'à `n`.",
+    "Pour `n = 0` ou `n = 1`, la boucle ne multiplie rien et le résultat reste `1`, ce qui est bien la valeur de `0!`. Affiche le résultat final."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\n\n# Affiche n!\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\n\n// Affiche n!\n"

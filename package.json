@@ -11,8 +11,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "node scripts/version.mjs check && tsc --noEmit && eslint . && prettier --check . && vitest run && cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --locked -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml --locked",
+    "check": "node scripts/version.mjs check && tsc --noEmit && tsc --noEmit -p e2e/tsconfig.json && eslint . && prettier --check . && vitest run && cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --locked -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml --locked",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "version:check": "node scripts/version.mjs check",
     "version:set": "node scripts/version.mjs set",
     "version:notes": "node scripts/version.mjs notes",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@tauri-apps/cli": "^2",
     "@types/node": "^26.6.5",
     "@types/react": "^19.1.8",

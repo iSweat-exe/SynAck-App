@@ -1,0 +1,33 @@
+{
+  "id": "lis",
+  "title": "Plus longue sous-suite croissante",
+  "difficulty": "hard",
+  "summary": "Trouve la longueur de la plus longue sous-suite strictement croissante d'une liste.",
+  "topics": [
+    "Listes",
+    "Programmation dynamique"
+  ],
+  "statement": "Une **sous-suite** s'obtient en retirant des éléments d'une liste **sans changer l'ordre** des autres. Trouve la **longueur de la plus longue sous-suite strictement croissante**.\n\nDans `3 1 4 1 5 9 2 6`, une plus longue est `1 4 5 9`, de longueur 4.",
+  "input": "- ligne 1 : `n` (1 ≤ n ≤ 800) ;\n- ligne 2 : les `n` entiers (de 0 à 1000), séparés par des espaces.",
+  "output": "Un entier : la longueur.",
+  "notes": "**Strictement** croissante : deux valeurs égales ne peuvent pas se suivre. Les éléments de la sous-suite ne sont pas forcément côte à côte.",
+  "examples": [
+    {
+      "input": "8\n10 9 2 5 3 7 101 18\n",
+      "output": "4"
+    },
+    {
+      "input": "5\n3 3 3 3 3\n",
+      "output": "1"
+    }
+  ],
+  "hints": [
+    "Pour chaque élément, demande-toi : quelle est la longueur de la plus longue sous-suite croissante qui **se termine exactement ici** ?",
+    "Note `best[i]` cette longueur. Elle vaut au minimum `1` (l'élément seul). Pour la calculer, regarde tous les éléments **avant** `i` qui sont strictement plus petits.",
+    "`best[i] = 1 + max(best[j])` pour tous les `j < i` tels que `valeurs[j] < valeurs[i]` (ou `1` s'il n'y en a aucun). La réponse n'est pas forcément celle du dernier élément : c'est le **maximum** de tout le tableau `best`."
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\nvaleurs = list(map(int, lines[1].split()))\n\n# Affiche la longueur de la plus longue sous-suite strictement croissante.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\nconst valeurs = lines[1].split(\" \").map(Number);\n\n// Affiche la longueur de la plus longue sous-suite strictement croissante.\n"
+  }
+}

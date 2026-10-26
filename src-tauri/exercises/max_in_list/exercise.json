@@ -21,6 +21,11 @@
       "output": "-2"
     }
   ],
+  "hints": [
+    "Tous les nombres peuvent être négatifs : démarrer la recherche à `0` est un piège.",
+    "Prends le **premier** nombre de la liste comme meilleur candidat de départ, puis compare-le avec chacun des suivants.",
+    "Parcours la liste : si un nombre est plus grand que ton candidat, il devient le nouveau candidat. À la fin, affiche-le."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nk = int(lines[0])\nnombres = lines[1]  # texte, ex. \"3 12 -5\"\n\n# Transforme ce texte en entiers, puis affiche le plus grand.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst k = Number(lines[0]);\nconst nombres = lines[1]; // texte, ex. \"3 12 -5\"\n\n// Transforme ce texte en nombres, puis affiche le plus grand.\n"

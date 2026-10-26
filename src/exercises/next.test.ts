@@ -14,6 +14,7 @@ function exercise(id: string): Exercise {
     output: "",
     notes: null,
     examples: [],
+    hints: [],
     starters: {},
   };
 }

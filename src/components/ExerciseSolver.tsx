@@ -7,6 +7,8 @@ import { MAX_CODE_BYTES, codeSize } from "../exercises/codeSize";
 import { CheckIcon } from "./CheckIcon";
 import { NavIcon } from "./NavIcon";
 import { CheckResults } from "./CheckResults";
+import { ExerciseHints } from "./ExerciseHints";
+import { ExerciseSolution } from "./ExerciseSolution";
 import { ExerciseStatement } from "./ExerciseStatement";
 import { SolvedFeedback } from "./SolvedFeedback";
 import { rewardOf, type Reward } from "../xp";
@@ -22,6 +24,9 @@ interface ExerciseSolverProps {
   environment: Environment;
   /** Whether the exercise is solved, in any language: which one does not matter. */
   solved: boolean;
+  /** How many of the hints the learner asked for. */
+  hintsShown: number;
+  onRevealHint: () => void;
   getCode: (language: string) => string;
   setCode: (language: string, code: string) => void;
   onBack: () => void;
@@ -41,6 +46,8 @@ export function ExerciseSolver({
   exercise,
   environment,
   solved,
+  hintsShown,
+  onRevealHint,
   getCode,
   setCode,
   onBack,
@@ -153,7 +160,10 @@ export function ExerciseSolver({
       </h2>
 
       <div className="solver-layout">
-        <ExerciseStatement exercise={exercise} />
+        <div className="screen">
+          <ExerciseStatement exercise={exercise} />
+          <ExerciseHints hints={exercise.hints} shown={hintsShown} onReveal={onRevealHint} />
+        </div>
 
         <div className="screen">
           <div className="runner-bar">
@@ -261,6 +271,15 @@ export function ExerciseSolver({
             )}
             {check.status === "done" && <CheckResults report={check.report} mode={check.mode} />}
           </div>
+
+          {(solved || justSolved) && (
+            <ExerciseSolution
+              key={language}
+              exerciseId={exercise.id}
+              language={language}
+              languageName={name}
+            />
+          )}
         </div>
       </div>
     </section>

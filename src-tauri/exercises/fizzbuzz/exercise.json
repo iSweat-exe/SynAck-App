@@ -20,6 +20,11 @@
       "output": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz"
     }
   ],
+  "hints": [
+    "Pour chaque nombre de `1` à `n`, tu dois décider **quel texte afficher** : le nombre ou un mot.",
+    "`i % 3 == 0` teste la divisibilité par 3. Le cas « divisible par 3 **et** par 5 » doit être testé **avant** les deux autres, sinon il n'est jamais atteint.",
+    "Ordre des tests : divisible par 15 → `FizzBuzz`, sinon par 3 → `Fizz`, sinon par 5 → `Buzz`, sinon le nombre lui-même. Un `print` par ligne."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn = int(lines[0])\n\n# Affiche les lignes de 1 à n.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst n = Number(lines[0]);\n\n// Affiche les lignes de 1 à n.\n"

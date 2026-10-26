@@ -1,0 +1,33 @@
+{
+  "id": "topological_order",
+  "title": "Ordre des tâches",
+  "difficulty": "hard",
+  "summary": "Ordonne des tâches qui dépendent les unes des autres, ou repère une contradiction.",
+  "topics": [
+    "Graphes",
+    "Listes"
+  ],
+  "statement": "Des tâches numérotées de `1` à `n` doivent être faites dans un certain ordre : certaines doivent être terminées **avant** d'autres. Donne un ordre qui respecte toutes ces contraintes.\n\nS'il y a plusieurs ordres possibles, fais comme suit : à **chaque étape**, parmi les tâches que tu peux faire, choisis celle de **plus petit numéro**.",
+  "input": "- ligne 1 : `n` (1 ≤ n ≤ 40) et `m` (0 ≤ m ≤ 120), séparés par un espace ;\n- puis `m` lignes : `a b`, qui veut dire que la tâche `a` doit être faite **avant** la tâche `b`.",
+  "output": "Les `n` tâches dans l'ordre, séparées par un espace. Si les contraintes se contredisent (un **cycle**), affiche `IMPOSSIBLE`.",
+  "notes": "Une même contrainte peut être répétée. Le choix de la plus petite tâche disponible se refait à **chaque** étape, pas une seule fois au début.",
+  "examples": [
+    {
+      "input": "4 2\n3 1\n4 2\n",
+      "output": "3 1 4 2"
+    },
+    {
+      "input": "3 3\n1 2\n2 3\n3 1\n",
+      "output": "IMPOSSIBLE"
+    }
+  ],
+  "hints": [
+    "Une tâche est « disponible » quand toutes celles qui doivent la précéder sont faites. Compte, pour chaque tâche, **combien de prérequis restent**.",
+    "Commence par les tâches sans aucun prérequis. Quand tu en fais une, retire un prérequis à chaque tâche qui en dépendait : celles qui tombent à zéro deviennent disponibles.",
+    "Garde l'ensemble des tâches disponibles ; à chaque étape, prends la **plus petite** (tri ou file de priorité), ajoute-la au résultat, puis mets à jour ses suivantes. Si à la fin le résultat contient moins de `n` tâches, il y a un cycle : affiche `IMPOSSIBLE`."
+  ],
+  "starters": {
+    "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\nn, m = map(int, lines[0].split())\ncontraintes = [tuple(map(int, lines[1 + k].split())) for k in range(m)]\n\n# contraintes contient des paires (a, b) : a avant b. Affiche l'ordre, ou IMPOSSIBLE.\n",
+    "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst [n, m] = lines[0].split(\" \").map(Number);\nconst contraintes = [];\nfor (let k = 0; k < m; k++) {\n  contraintes.push(lines[1 + k].split(\" \").map(Number));\n}\n\n// contraintes contient des paires [a, b] : a avant b. Affiche l'ordre, ou IMPOSSIBLE.\n"
+  }
+}

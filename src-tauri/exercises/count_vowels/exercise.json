@@ -21,6 +21,11 @@
       "output": "4"
     }
   ],
+  "hints": [
+    "Les majuscules comptent aussi : `A` et `a` sont toutes deux des voyelles.",
+    "Mets le texte en minuscules (`lower()` / `toLowerCase()`) avant de compter, pour ne tester que `a e i o u y`.",
+    "Parcours le texte lettre par lettre : si la lettre est dans la chaîne `\"aeiouy\"`, ajoute 1 à un compteur. Affiche le compteur."
+  ],
   "starters": {
     "python": "import sys\n\nlines = sys.stdin.read().split(\"\\n\")\ntexte = lines[0]\n\n# Affiche le nombre de voyelles.\n",
     "javascript": "const lines = require(\"fs\").readFileSync(0, \"utf8\").split(\"\\n\");\nconst texte = lines[0];\n\n// Affiche le nombre de voyelles.\n"

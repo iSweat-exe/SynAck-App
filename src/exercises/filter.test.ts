@@ -13,6 +13,7 @@ function exercise(overrides: Partial<Exercise> & Pick<Exercise, "id">): Exercise
     output: "",
     notes: null,
     examples: [],
+    hints: [],
     starters: { python: "", javascript: "" },
     ...overrides,
   };
